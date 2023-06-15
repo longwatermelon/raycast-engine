@@ -13,7 +13,7 @@ async fn main() {
     textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
     let mut map: Map = Map::new("examples/res/map", textures);
-    let entities: Vec<Entity> = map.filter_entities(&['e']);
+    let mut entities: Vec<Entity> = map.filter_entities(&['e']);
 
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
     // let entities: Vec<Entity> = (0..20).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
@@ -31,7 +31,7 @@ async fn main() {
         }
 
         if is_key_down(KeyCode::W) {
-            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(2.));
+            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(5.));
         }
 
         if is_key_down(KeyCode::S) {
@@ -50,6 +50,11 @@ async fn main() {
         cam.angle += (mx - prev_mx) / 200.;
         cam.angle = raycast::util::restrict_angle(cam.angle);
         prev_mx = mx;
+
+        let angle_towards_player: f32 = f32::atan2(
+            cam.orig.y - entities[0].pos.y, cam.orig.x - entities[0].pos.x
+        );
+        entities[0].pos = map.move_collidable(entities[0].pos, Ray::new(entities[0].pos, raycast::util::restrict_angle(angle_towards_player)).along(1.));
 
         clear_background(BLACK);
 
