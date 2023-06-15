@@ -11,8 +11,8 @@ pub struct Intersection {
 
 pub struct Map {
     layout: String,
-    w: i32,
-    h: i32,
+    pub(crate) w: i32,
+    pub(crate) h: i32,
     pub(crate) tsize: i32
 }
 
@@ -54,21 +54,21 @@ impl Map {
 
     pub fn cast_ray(&self, ray: Ray) -> Intersection {
         let h: Intersection = self.cast_ray_h(ray);
-        // let v: Intersection = self.cast_ray_v(ray);
+        let v: Intersection = self.cast_ray_v(ray);
 
         // if h.distance < v.distance { h } else { v }
-        h
+        v
     }
 
     fn cast_ray_h(&self, ray: Ray) -> Intersection {
         let mut closest: Vec2 = Vec2::new(0., 0.);
-        closest.y = ray.orig.y - ray.orig.y.rem_euclid(self.tsize as f32) +
-                        if ray.angle > PI { self.tsize as f32 } else { 0. };
-        closest.x = ray.orig.x + ((closest.y - ray.orig.y) / -f32::tan(ray.angle));
+        closest.y = ray.orig.y - ray.orig.y % self.tsize as f32 +
+                        if ray.dir().y > 0. { self.tsize } else { 0 } as f32;
+        closest.x = ray.orig.x + ((closest.y - ray.orig.y) / f32::tan(ray.angle));
 
         loop {
             let mut gpos: IVec2 = self.gpos(closest);
-            if ray.angle < PI {
+            if ray.dir().y < 0. {
                 gpos.y -= 1;
             }
 
@@ -76,27 +76,43 @@ impl Map {
                 return Intersection::new(gpos, glm::length(closest - ray.orig));
             }
 
-            let dy: f32 = if ray.angle < PI { -self.tsize } else { self.tsize } as f32;
+            let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
             closest.y += dy;
-            closest.x += dy / -f32::tan(ray.angle);
+            closest.x += dy / f32::tan(ray.angle);
         }
     }
 
     fn cast_ray_v(&self, ray: Ray) -> Intersection {
-        todo!()
+        let mut closest: Vec2 = Vec2::new(0., 0.);
+        closest.x = ray.orig.x - ray.orig.x % self.tsize as f32 +
+                        if ray.dir().x > 0. { self.tsize } else { 0 } as f32;
+        closest.y = ray.orig.y + ((closest.x - ray.orig.x) / -f32::tan(ray.angle));
+
+        loop {
+            let mut gpos: IVec2 = self.gpos(closest);
+            if ray.dir().x < 0. {
+                gpos.x -= 1;
+            }
+
+            if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
+                return Intersection::new(gpos, glm::length(closest - ray.orig));
+            }
+
+            let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
+            closest.x += dx;
+            closest.y += dx * -f32::tan(ray.angle);
+        }
     }
 
     pub fn gpos(&self, pos: Vec2) -> IVec2 {
-        let x: i32 = pos.x as i32;
-        let y: i32 = pos.y as i32;
         IVec2::new(
-            (x - x % self.tsize as i32) / self.tsize as i32,
-            (y - y % self.tsize as i32) / self.tsize as i32
+            ((pos.x - pos.x % self.tsize as f32) / self.tsize as f32) as i32,
+            ((pos.y - pos.y % self.tsize as f32) / self.tsize as f32) as i32
         )
     }
 
     pub fn at(&self, gx: i32, gy: i32) -> char {
-        self.layout.chars().nth((gy * self.w + gx) as usize).unwrap()
+        self.layout.chars().nth((gy * self.w + gx) as usize).unwrap_or(' ')
     }
 
     pub fn out_of_bounds(&self, gpos: IVec2) -> bool {
