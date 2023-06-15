@@ -56,8 +56,7 @@ impl Map {
         let h: Intersection = self.cast_ray_h(ray);
         let v: Intersection = self.cast_ray_v(ray);
 
-        // if h.distance < v.distance { h } else { v }
-        v
+        if h.distance < v.distance { h } else { v }
     }
 
     fn cast_ray_h(&self, ray: Ray) -> Intersection {
@@ -84,12 +83,14 @@ impl Map {
 
     fn cast_ray_v(&self, ray: Ray) -> Intersection {
         let mut closest: Vec2 = Vec2::new(0., 0.);
+        // println!("orig x = {} | orig x % tsize = {}", ray.orig.x, ray.orig.x % self.tsize as f32);
         closest.x = ray.orig.x - ray.orig.x % self.tsize as f32 +
                         if ray.dir().x > 0. { self.tsize } else { 0 } as f32;
-        closest.y = ray.orig.y + ((closest.x - ray.orig.x) / -f32::tan(ray.angle));
+        closest.y = ray.orig.y + ((closest.x - ray.orig.x) * f32::tan(ray.angle));
 
         loop {
             let mut gpos: IVec2 = self.gpos(closest);
+            // println!("closest = {:?} | gpos = {:?} | char at gpos = {}", closest, gpos, self.at(gpos.x, gpos.y));
             if ray.dir().x < 0. {
                 gpos.x -= 1;
             }
@@ -100,7 +101,7 @@ impl Map {
 
             let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
             closest.x += dx;
-            closest.y += dx * -f32::tan(ray.angle);
+            closest.y += dx * f32::tan(ray.angle);
         }
     }
 
