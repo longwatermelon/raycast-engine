@@ -14,12 +14,25 @@ async fn main() {
     let map: Map = Map::new("examples/res/map", textures);
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
-    let entities: Vec<Entity> = vec![
-        Entity::new(Vec2::new(200., 200.), 'e'),
-        Entity::new(Vec2::new(300., 200.), 'e')
-    ];
+    // let entities: Vec<Entity> = vec![
+    //     Entity::new(Vec2::new(200., 200.), 'e'),
+    //     Entity::new(Vec2::new(300., 200.), 'e')
+    // ];
+
+    let entities: Vec<Entity> = (0..40).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
+
+    let mut prev_mx: f32 = mouse_position().0;
+    let mut grabbed: bool = true;
+    set_cursor_grab(true);
+    show_mouse(false);
 
     loop {
+        if is_key_pressed(KeyCode::Tab) {
+            grabbed = !grabbed;
+            set_cursor_grab(grabbed);
+            show_mouse(!grabbed);
+        }
+
         if is_key_down(KeyCode::W) {
             cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(2.));
         }
@@ -31,6 +44,10 @@ async fn main() {
         if is_key_down(KeyCode::Left) {
             cam.angle -= 0.1;
         }
+
+        let mx: f32 = mouse_position().0;
+        cam.angle += (mx - prev_mx) / 200.;
+        prev_mx = mx;
 
         clear_background(BLACK);
 
