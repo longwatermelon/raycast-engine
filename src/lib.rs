@@ -65,6 +65,7 @@ pub fn render_item(items: &mut Vec<Item>) {
     }
 }
 
+/// Animated swap of items
 pub fn equip_item(items: &mut Vec<Item>, item_name: &str) {
     for item in items {
         item.unequip();

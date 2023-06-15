@@ -1,10 +1,18 @@
 use macroquad::prelude::*;
+use std::time::Instant;
+
+pub enum Animation {
+    None,
+    Jab { diff: Vec2, t: f32 },
+    EaseIn { target: Vec2 }
+}
 
 pub struct Item {
     pub name: String,
     texture: Texture2D,
     pos: Vec2,
-    target: Vec2
+    animation: Animation,
+    animation_start: Instant
 }
 
 impl Item {
@@ -15,20 +23,39 @@ impl Item {
             name: String::from(name),
             texture,
             pos,
-            target: pos
+            animation: Animation::None,
+            animation_start: Instant::now()
         }
     }
 
     pub fn unequip(&mut self) {
-        self.target = Vec2::new(screen_width() - self.texture.width(), screen_height());
+        self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height()) };
+        self.animation_start = Instant::now();
     }
 
     pub fn equip(&mut self) {
-        self.target = Vec2::new(screen_width() - self.texture.width(), screen_height() - self.texture.height());
+        self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height() - self.texture.height()) };
+        self.animation_start = Instant::now();
+    }
+
+    pub fn jab(&mut self, diff: Vec2, t: f32) {
+        self.animation = Animation::Jab { diff, t };
+        self.animation_start = Instant::now();
     }
 
     pub fn update(&mut self) {
-        self.pos += (self.target - self.pos) / 5.;
+        match self.animation {
+            Animation::None => (),
+            Animation::Jab { diff, t } => {
+                let elapsed: f32 = self.animation_start.elapsed().as_millis() as f32 / 1000.;
+                if elapsed < t {
+                    self.pos += diff;
+                } else {
+                    self.equip();
+                }
+            },
+            Animation::EaseIn { target } => self.pos += (target - self.pos) / 5.
+        }
     }
 
     pub fn render(&self) {

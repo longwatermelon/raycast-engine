@@ -78,6 +78,11 @@ async fn main() {
             raycast::equip_item(&mut items, "knife");
         }
 
+        // Animation demo
+        if is_key_pressed(KeyCode::Space) {
+            items[1].jab(Vec2::new(0., -100.), 0.01);
+        }
+
         clear_background(BLACK);
         raycast::render(&map, cam, &entities);
         raycast::render_item(&mut items);
