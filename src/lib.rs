@@ -8,14 +8,14 @@ use map::Map;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: Vec<Entity>) {
+pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: &Vec<Entity>) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     for i in 0..scrw {
         let angle: f32 = start_angle + (i as f32 / scrw as f32 * angle_range);
         let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, scrh);
-        render_entities(map, Ray::new(ray.orig, angle), i, scrh, entities.clone(), wall_dist);
+        render_entities(map, Ray::new(ray.orig, angle), i, scrh, entities, wall_dist);
     }
 }
 
@@ -56,6 +56,21 @@ pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
     draw_line(ox, oy, endx, endy, 3., BLUE);
 }
 
+pub fn cast_ray(map: &Map, entities: &Vec<Entity>, ray: Ray) -> Intersection {
+    let map_ins: Intersection = map.cast_ray(ray);
+
+    let mut ent_ins: Intersection = Intersection::new(IntersectionType::Entity { col: 0. }, f32::INFINITY);
+    for ent in entities {
+        if let Some(ins) = entity::intersect(ray, ent.pos) {
+            if ins.distance < ent_ins.distance {
+                ent_ins = ins;
+            }
+        }
+    }
+
+    if map_ins.distance < ent_ins.distance { map_ins } else { ent_ins }
+}
+
 fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) -> f32 {
     let mut ins: Intersection = map.cast_ray(ray);
     let endp: Vec2 = ray.along(ins.distance);
@@ -91,7 +106,7 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) -> f32 
     ins.distance
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, scrh: i32, entities: Vec<Entity>, wall_dist: f32) {
+fn render_entities(map: &Map, ray: Ray, col: i32, scrh: i32, entities: &Vec<Entity>, wall_dist: f32) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()

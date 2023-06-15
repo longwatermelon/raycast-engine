@@ -1,5 +1,5 @@
 use raycast::map::Map;
-use raycast::util::Ray;
+use raycast::util::{Ray, Intersection, IntersectionType};
 use raycast::entity::Entity;
 use macroquad::prelude::*;
 use std::collections::HashMap;
@@ -16,7 +16,6 @@ async fn main() {
     let mut entities: Vec<Entity> = map.filter_entities(&['e']);
 
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
-    // let entities: Vec<Entity> = (0..20).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
 
     let mut prev_mx: f32 = mouse_position().0;
     let mut grabbed: bool = true;
@@ -24,6 +23,7 @@ async fn main() {
     show_mouse(false);
 
     loop {
+        // Fps camera
         if is_key_pressed(KeyCode::Tab) {
             grabbed = !grabbed;
             set_cursor_grab(grabbed);
@@ -51,10 +51,20 @@ async fn main() {
         cam.angle = raycast::util::restrict_angle(cam.angle);
         prev_mx = mx;
 
+        // Entity move towards player
         entities[0].pos = raycast::util::move_towards_collidable(&map, entities[0].pos, cam.orig, 1.);
 
+        // Shooting mechanic
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let ins: Intersection = raycast::cast_ray(&map, &entities, cam);
+            match ins.itype {
+                IntersectionType::Entity {..} => println!("Hit entity"),
+                _ => println!("Hit wall")
+            }
+        }
+
         clear_background(BLACK);
-        raycast::render(&map, cam, 800, 800, entities.clone());
+        raycast::render(&map, cam, 800, 800, &entities);
         next_frame().await;
     }
 }
