@@ -10,14 +10,14 @@ use item::Item;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, entities: &Vec<Entity>, ray: Ray) {
+pub fn render(map: &Map, entities: &Vec<Entity>, ray: Ray, fog: Option<f32>) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     for i in 0..screen_width() as i32 {
         let angle: f32 = start_angle + (i as f32 / screen_height() * angle_range);
-        let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i);
-        render_entities(map, Ray::new(ray.orig, angle), i, entities, wall_dist);
+        let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, fog);
+        render_entities(map, Ray::new(ray.orig, angle), i, entities, wall_dist, fog);
     }
 }
 
@@ -90,7 +90,11 @@ pub fn cast_ray(map: &Map, entities: &Vec<Entity>, ray: Ray) -> Intersection {
     if map_ins.distance < ent_ins.distance { map_ins } else { ent_ins }
 }
 
-fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32) -> f32 {
+fn calculate_fog(fog: f32, distance: f32) -> f32 {
+    1. - f32::min(distance / fog, 1.)
+}
+
+fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, fog: Option<f32>) -> f32 {
     let mut ins: Intersection = map.cast_ray(ray);
     let endp: Vec2 = ray.along(ins.distance);
     ins.distance *= f32::cos(util::restrict_angle(cam_angle - ray.angle));
@@ -105,9 +109,15 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32) -> f32 {
         endp.y
     };
 
+    let shading: f32 = if let Some(fog) = fog {
+        calculate_fog(fog, ins.distance)
+    } else {
+        1.
+    };
+
     draw_texture_ex(
         *texture,
-        col as f32, offset, WHITE,
+        col as f32, offset, Color::new(shading, shading, shading, 1.),
         DrawTextureParams {
             dest_size: Some(Vec2::new(1., h)),
             source: Some(
@@ -125,7 +135,7 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32) -> f32 {
     ins.distance
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_dist: f32) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_dist: f32, fog: Option<f32>) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
@@ -150,9 +160,14 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_d
         );
         let dst: Rect = Rect::new(col as f32, offset, 1., h);
 
+        let shading: f32 = if let Some(fog) = fog {
+            calculate_fog(fog, ins.distance)
+        } else {
+            1.
+        };
         draw_texture_ex(
             *map.textures.get(&ent.texture).unwrap(),
-            dst.x, dst.y, WHITE,
+            dst.x, dst.y, Color::new(shading, shading, shading, 1.),
             DrawTextureParams {
                 dest_size: Some(Vec2::new(dst.w, dst.h)),
                 source: Some(src),

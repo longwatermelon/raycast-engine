@@ -74,7 +74,7 @@ async fn main() {
         }
 
         clear_background(BLACK);
-        raycast::render(&map, &entities, cam);
+        raycast::render(&map, &entities, cam, Some(300.));
         raycast::render_item(&mut items);
         next_frame().await;
     }
