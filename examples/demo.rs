@@ -21,6 +21,8 @@ async fn main() {
         Item::new("knife", "examples/res/knife.png").await
     ];
 
+    let shooting_gun: Texture2D = Texture2D::from_file_with_format(include_bytes!("res/gun-shoot.png"), Some(ImageFormat::Png));
+
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
     let mut prev_mx: f32 = mouse_position().0;
@@ -62,6 +64,7 @@ async fn main() {
 
         // Shooting mechanic
         if is_mouse_button_pressed(MouseButton::Left) {
+            items[0].texswap(&shooting_gun, 0.1);
             let ins: Intersection = raycast::cast_ray(&map, &entities, cam);
             match ins.itype {
                 IntersectionType::Entity {..} => println!("Hit entity"),
