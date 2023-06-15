@@ -14,8 +14,8 @@ pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: Vec<Entity>) 
 
     for i in 0..scrw {
         let angle: f32 = start_angle + (i as f32 / scrw as f32 * angle_range);
-        render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, scrh);
-        render_entities(map, Ray::new(ray.orig, angle), ray.angle, i, scrh, entities.clone());
+        let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, scrh);
+        render_entities(map, Ray::new(ray.orig, angle), i, scrh, entities.clone(), wall_dist);
     }
 }
 
@@ -56,7 +56,7 @@ pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
     draw_line(ox, oy, endx, endy, 3., BLUE);
 }
 
-fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
+fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) -> f32 {
     let mut ins: Intersection = map.cast_ray(ray);
     let endp: Vec2 = ray.along(ins.distance);
     ins.distance *= f32::cos(util::restrict_angle(cam_angle - ray.angle));
@@ -87,24 +87,17 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
             ..Default::default()
         }
     );
+
+    ins.distance
 }
 
-fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, entities: Vec<Entity>) {
-    // let mut src: Rect = Rect::default();
-    // src.x = 0.;
-    // src.y = 0.;
-    // src.w = 1.;
-    // src.h = 100.;
-
-    // let mut dst: Rect = Rect::default();
-    // dst.x = col as f32;
-    // dst.w = 1.;
-
+fn render_entities(map: &Map, ray: Ray, col: i32, scrh: i32, entities: Vec<Entity>, wall_dist: f32) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
         .map(|e| (e.clone(), entity::intersect(ray, e.pos)))
         .filter(|x| x.1.is_some())
+        .filter(|x| x.1.as_ref().unwrap().distance < wall_dist)
         .map(|t| (t.0, t.1.unwrap()))
         .collect();
 
@@ -123,7 +116,6 @@ fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, ent
         );
         let dst: Rect = Rect::new(col as f32, offset, 1., h);
 
-        // draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
         draw_texture_ex(
             *map.textures.get(&ent.texture).unwrap(),
             dst.x, dst.y, WHITE,
@@ -134,23 +126,5 @@ fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, ent
             }
         );
     }
-
-    // if let Some(distance) = entity::intersect(ray, Vec2::new(200., 200.)) {
-    //     let h: f32 = (25. * scrh as f32) / distance;
-    //     let offset: f32 = scrh as f32 / 2.;
-    //     dst.y = offset;
-    //     dst.h = h;
-
-    //     draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
-        // draw_texture_ex(
-        //     Texture2D::from_file_with_format(include_bytes!("../examples/res/shrek.png"), Some(ImageFormat::Png)),
-        //     dst.x, dst.y, WHITE,
-        //     DrawTextureParams {
-        //         dest_size: Some(Vec2::new(dst.w, dst.h)),
-        //         source: Some(src),
-        //         ..Default::default()
-        //     }
-        // );
-    // }
 }
 
