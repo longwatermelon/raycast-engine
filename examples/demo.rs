@@ -9,7 +9,7 @@ async fn main() {
 
     loop {
         if is_key_down(KeyCode::W) {
-            cam.orig = Ray::new(cam.orig, cam.angle).along(2.);
+            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(2.));
         }
 
         if is_key_down(KeyCode::Right) {

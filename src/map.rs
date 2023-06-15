@@ -82,14 +82,12 @@ impl Map {
 
     fn cast_ray_v(&self, ray: Ray) -> Intersection {
         let mut closest: Vec2 = Vec2::new(0., 0.);
-        // println!("orig x = {} | orig x % tsize = {}", ray.orig.x, ray.orig.x % self.tsize as f32);
         closest.x = ray.orig.x - ray.orig.x % self.tsize as f32 +
                         if ray.dir().x > 0. { self.tsize } else { 0 } as f32;
         closest.y = ray.orig.y + ((closest.x - ray.orig.x) * f32::tan(ray.angle));
 
         loop {
             let mut gpos: IVec2 = self.gpos(closest);
-            // println!("closest = {:?} | gpos = {:?} | char at gpos = {}", closest, gpos, self.at(gpos.x, gpos.y));
             if ray.dir().x < 0. {
                 gpos.x -= 1;
             }
@@ -102,6 +100,21 @@ impl Map {
             closest.x += dx;
             closest.y += dx * f32::tan(ray.angle);
         }
+    }
+
+    pub fn move_collidable(&self, before: Vec2, after: Vec2) -> Vec2 {
+        let offset: Vec2 = Vec2::new(
+            if after.x - before.x > 0. { 5. } else { -5. },
+            if after.y - before.y > 0. { 5. } else { -5. }
+        );
+
+        let gpos: IVec2 = self.gpos(before + offset);
+        let new_gpos: IVec2 = self.gpos(after + offset);
+
+        Vec2::new(
+            if self.at(new_gpos.x, gpos.y) == '.' { after.x } else { before.x },
+            if self.at(gpos.x, new_gpos.y) == '.' { after.y } else { before.y }
+        )
     }
 
     pub fn gpos(&self, pos: Vec2) -> IVec2 {
