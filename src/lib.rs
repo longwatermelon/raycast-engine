@@ -1,27 +1,29 @@
 pub mod util;
 pub mod map;
 pub mod entity;
+pub mod item;
 
 use util::{Ray, Intersection, IntersectionType};
 use entity::Entity;
 use map::Map;
+use item::Item;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: &Vec<Entity>) {
+pub fn render(map: &Map, ray: Ray, entities: &Vec<Entity>) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
-    for i in 0..scrw {
-        let angle: f32 = start_angle + (i as f32 / scrw as f32 * angle_range);
-        let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, scrh);
-        render_entities(map, Ray::new(ray.orig, angle), i, scrh, entities, wall_dist);
+    for i in 0..screen_width() as i32 {
+        let angle: f32 = start_angle + (i as f32 / screen_height() * angle_range);
+        let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i);
+        render_entities(map, Ray::new(ray.orig, angle), i, entities, wall_dist);
     }
 }
 
-pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
-    let w: f32 = scrw as f32 / map.w as f32;
-    let h: f32 = scrh as f32 / map.h as f32;
+pub fn render_2d(map: &Map, ray: Ray) {
+    let w: f32 = screen_width() / map.w as f32;
+    let h: f32 = screen_height() / map.h as f32;
     for y in 0..map.h as i32 {
         for x in 0..map.w as i32 {
             if map.at(x, y) != '.' {
@@ -41,8 +43,8 @@ pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
         }
     }
 
-    let ox: f32 = ray.orig.x * (scrw as f32 / (map.w * map.tsize) as f32);
-    let oy: f32 = ray.orig.y * (scrh as f32 / (map.h * map.tsize) as f32);
+    let ox: f32 = ray.orig.x * (screen_width() as f32 / (map.w * map.tsize) as f32);
+    let oy: f32 = ray.orig.y * (screen_height() as f32 / (map.h * map.tsize) as f32);
     draw_rectangle(
         ox - 5., oy - 5.,
         10., 10.,
@@ -51,9 +53,25 @@ pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
 
     let angle: f32 = ray.angle;
     let ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
-    let endx: f32 = ox + (ins.distance * f32::cos(angle) * (scrw as f32 / (map.w * map.tsize) as f32));
-    let endy: f32 = oy + (ins.distance * f32::sin(angle) * (scrh as f32 / (map.h * map.tsize) as f32));
+    let endx: f32 = ox + (ins.distance * f32::cos(angle) * (screen_width() as f32 / (map.w * map.tsize) as f32));
+    let endy: f32 = oy + (ins.distance * f32::sin(angle) * (screen_height() as f32 / (map.h * map.tsize) as f32));
     draw_line(ox, oy, endx, endy, 3., BLUE);
+}
+
+pub fn render_item(items: &mut Vec<Item>) {
+    for item in items {
+        item.update();
+        item.render();
+    }
+}
+
+pub fn equip_item(items: &mut Vec<Item>, item_name: &str) {
+    for item in items {
+        item.unequip();
+        if item.name == String::from(item_name) {
+            item.equip();
+        }
+    }
 }
 
 pub fn cast_ray(map: &Map, entities: &Vec<Entity>, ray: Ray) -> Intersection {
@@ -71,13 +89,13 @@ pub fn cast_ray(map: &Map, entities: &Vec<Entity>, ray: Ray) -> Intersection {
     if map_ins.distance < ent_ins.distance { map_ins } else { ent_ins }
 }
 
-fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) -> f32 {
+fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32) -> f32 {
     let mut ins: Intersection = map.cast_ray(ray);
     let endp: Vec2 = ray.along(ins.distance);
     ins.distance *= f32::cos(util::restrict_angle(cam_angle - ray.angle));
 
-    let h: f32 = (map.tsize as f32 * scrh as f32) / ins.distance;
-    let offset: f32 = (scrh as f32 - h) / 2.;
+    let h: f32 = (map.tsize as f32 * screen_height() as f32) / ins.distance;
+    let offset: f32 = (screen_height() as f32 - h) / 2.;
 
     let texture: &Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
     let texture_index: f32 = if matches!(ins.itype, IntersectionType::WallHorizontal {..}) {
@@ -106,7 +124,7 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) -> f32 
     ins.distance
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, scrh: i32, entities: &Vec<Entity>, wall_dist: f32) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_dist: f32) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
@@ -120,8 +138,8 @@ fn render_entities(map: &Map, ray: Ray, col: i32, scrh: i32, entities: &Vec<Enti
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
     for (ent, ins) in &vins {
-        let h: f32 = (25. * scrh as f32) / ins.distance;
-        let offset: f32 = scrh as f32 / 2.;
+        let h: f32 = (25. * screen_height()) / ins.distance;
+        let offset: f32 = screen_height() / 2.;
 
         let src: Rect = Rect::new(
             ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
