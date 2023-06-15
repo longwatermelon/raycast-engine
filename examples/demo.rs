@@ -1,5 +1,6 @@
 use raycast::map::Map;
 use raycast::util::Ray;
+use raycast::entity::Entity;
 use macroquad::prelude::*;
 use std::collections::HashMap;
 
@@ -8,9 +9,15 @@ async fn main() {
     let mut textures: HashMap<char, Texture2D> = HashMap::new();
     textures.insert('0', Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(ImageFormat::Png)));
     textures.insert('5', Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(ImageFormat::Png)));
+    textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
     let map: Map = Map::new("examples/res/map", textures);
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
+
+    let entities: Vec<Entity> = vec![
+        Entity::new(Vec2::new(200., 200.), 'e'),
+        Entity::new(Vec2::new(300., 200.), 'e')
+    ];
 
     loop {
         if is_key_down(KeyCode::W) {
@@ -28,7 +35,7 @@ async fn main() {
         clear_background(BLACK);
 
         cam.angle = raycast::util::restrict_angle(cam.angle);
-        raycast::render(&map, cam, 800, 800);
+        raycast::render(&map, cam, 800, 800, entities.clone());
 
         next_frame().await;
     }

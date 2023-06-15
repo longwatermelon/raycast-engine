@@ -1,18 +1,21 @@
 pub mod util;
 pub mod map;
+pub mod entity;
 
 use util::Ray;
+use entity::Entity;
 use map::{Map, Intersection, IntersectionType};
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
+pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: Vec<Entity>) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     for i in 0..scrw {
         let angle: f32 = start_angle + (i as f32 / scrw as f32 * angle_range);
         render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, scrh);
+        render_entities(map, Ray::new(ray.orig, angle), ray.angle, i, scrh, entities.clone());
     }
 }
 
@@ -84,5 +87,60 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
             ..Default::default()
         }
     );
+}
+
+fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, entities: Vec<Entity>) {
+    let mut src: Rect = Rect::default();
+    src.x = 0.;
+    src.y = 0.;
+    src.w = 1.;
+    src.h = 100.;
+
+    let mut dst: Rect = Rect::default();
+    dst.x = col as f32;
+    dst.w = 1.;
+
+    let mut distances: Vec<f32> = entities
+        .iter()
+        .cloned()
+        .map(|e| entity::intersect(ray, e.pos))
+        .filter(|x| x.is_some())
+        .map(|t| t.unwrap())
+        .collect();
+
+    for e in &entities {
+        if let Some(distance) = entity::intersect(ray, e.pos) {
+            distances.push(distance);
+        }
+    }
+    // Sort in descending, render farther entities first
+    distances.sort_by(|a, b| b.partial_cmp(a).unwrap());
+
+    for distance in distances {
+        let h: f32 = (25. * scrh as f32) / distance;
+        let offset: f32 = scrh as f32 / 2.;
+        dst.y = offset;
+        dst.h = h;
+
+        draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
+    }
+
+    // if let Some(distance) = entity::intersect(ray, Vec2::new(200., 200.)) {
+    //     let h: f32 = (25. * scrh as f32) / distance;
+    //     let offset: f32 = scrh as f32 / 2.;
+    //     dst.y = offset;
+    //     dst.h = h;
+
+    //     draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
+        // draw_texture_ex(
+        //     Texture2D::from_file_with_format(include_bytes!("../examples/res/shrek.png"), Some(ImageFormat::Png)),
+        //     dst.x, dst.y, WHITE,
+        //     DrawTextureParams {
+        //         dest_size: Some(Vec2::new(dst.w, dst.h)),
+        //         source: Some(src),
+        //         ..Default::default()
+        //     }
+        // );
+    // }
 }
 
