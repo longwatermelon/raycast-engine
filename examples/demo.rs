@@ -3,6 +3,7 @@ use raycast::util::Ray;
 use raycast::entity::Entity;
 use macroquad::prelude::*;
 use std::collections::HashMap;
+use std::f32::consts::PI;
 
 #[macroquad::main(window_conf)]
 async fn main() {
@@ -19,7 +20,7 @@ async fn main() {
     //     Entity::new(Vec2::new(300., 200.), 'e')
     // ];
 
-    let entities: Vec<Entity> = (0..40).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
+    let entities: Vec<Entity> = (0..20).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
 
     let mut prev_mx: f32 = mouse_position().0;
     let mut grabbed: bool = true;
@@ -37,12 +38,16 @@ async fn main() {
             cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(2.));
         }
 
-        if is_key_down(KeyCode::Right) {
-            cam.angle += 0.1;
+        if is_key_down(KeyCode::S) {
+            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(-2.));
         }
 
-        if is_key_down(KeyCode::Left) {
-            cam.angle -= 0.1;
+        if is_key_down(KeyCode::A) {
+            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, raycast::util::restrict_angle(cam.angle - PI / 2.)).along(1.));
+        }
+
+        if is_key_down(KeyCode::D) {
+            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, raycast::util::restrict_angle(cam.angle - PI / 2.)).along(-1.));
         }
 
         let mx: f32 = mouse_position().0;
