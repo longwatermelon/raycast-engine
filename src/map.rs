@@ -1,8 +1,7 @@
 use crate::util::Ray;
-use glm::{IVec2, Vec2};
+use macroquad::math::{Vec2, IVec2};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
-use std::f32::consts::PI;
 
 pub struct Intersection {
     pub gpos: IVec2,
@@ -72,7 +71,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, glm::length(closest - ray.orig));
+                return Intersection::new(gpos, (closest - ray.orig).length());
             }
 
             let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
@@ -96,7 +95,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, glm::length(closest - ray.orig));
+                return Intersection::new(gpos, (closest - ray.orig).length());
             }
 
             let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;

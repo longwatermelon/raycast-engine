@@ -1,7 +1,6 @@
 use raycast::map::Map;
 use raycast::util::Ray;
 use macroquad::prelude::*;
-use glm::Vec2;
 
 #[macroquad::main(window_conf)]
 async fn main() {
@@ -9,15 +8,24 @@ async fn main() {
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
     loop {
+        if is_key_down(KeyCode::W) {
+            cam.orig = Ray::new(cam.orig, cam.angle).along(2.);
+        }
+
+        if is_key_down(KeyCode::Right) {
+            cam.angle += 0.1;
+        }
+
+        if is_key_down(KeyCode::Left) {
+            cam.angle -= 0.1;
+        }
+
         clear_background(BLACK);
 
-        raycast::render(&map, cam, 800, 800);
-        raycast::render_2d(&map, cam, 800, 800);
-        cam.angle += 0.01;
         cam.angle = raycast::util::restrict_angle(cam.angle);
+        raycast::render(&map, cam, 800, 800);
 
         next_frame().await;
-        // break;
     }
 }
 

@@ -1,4 +1,4 @@
-use glm::Vec2;
+use macroquad::math::Vec2;
 use std::f32::consts::PI;
 
 #[derive(Copy, Clone)]
