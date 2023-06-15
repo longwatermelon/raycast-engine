@@ -1,10 +1,43 @@
-use macroquad::math::Vec2;
+use macroquad::math::{Vec2, IVec2};
 use std::f32::consts::PI;
+
+#[derive(PartialEq)]
+pub enum IntersectionType {
+    WallHorizontal { gpos: IVec2 },
+    WallVertical { gpos: IVec2 },
+    Entity { col: f32 }
+}
+
+pub struct Intersection {
+    pub itype: IntersectionType,
+    pub distance: f32
+}
 
 #[derive(Copy, Clone)]
 pub struct Ray {
     pub orig: Vec2,
     pub angle: f32
+}
+
+impl Intersection {
+    pub fn new(itype: IntersectionType, distance: f32) -> Self {
+        Self { itype, distance }
+    }
+
+    pub fn wall_gpos(&self) -> IVec2 {
+        match self.itype {
+            IntersectionType::WallVertical { gpos } |
+            IntersectionType::WallHorizontal { gpos } => gpos,
+            _ => panic!()
+        }
+    }
+
+    pub fn entity_col(&self) -> f32 {
+        match self.itype {
+            IntersectionType::Entity { col } => col,
+            _ => panic!()
+        }
+    }
 }
 
 impl Ray {

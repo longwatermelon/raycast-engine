@@ -2,9 +2,9 @@ pub mod util;
 pub mod map;
 pub mod entity;
 
-use util::Ray;
+use util::{Ray, Intersection, IntersectionType};
 use entity::Entity;
-use map::{Map, Intersection, IntersectionType};
+use map::Map;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
@@ -64,8 +64,8 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
     let h: f32 = (map.tsize as f32 * scrh as f32) / ins.distance;
     let offset: f32 = (scrh as f32 - h) / 2.;
 
-    let texture: &Texture2D = map.textures.get(&map.at(ins.gpos.x, ins.gpos.y)).unwrap();
-    let texture_index: f32 = if ins.itype == IntersectionType::Horizontal {
+    let texture: &Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
+    let texture_index: f32 = if matches!(ins.itype, IntersectionType::WallHorizontal {..}) {
         endp.x
     } else {
         endp.y

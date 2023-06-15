@@ -1,20 +1,8 @@
-use crate::util::Ray;
+use crate::util::{Ray, Intersection, IntersectionType};
 use macroquad::prelude::*;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
-
-#[derive(PartialEq)]
-pub enum IntersectionType {
-    Horizontal,
-    Vertical
-}
-
-pub struct Intersection {
-    pub gpos: IVec2,
-    pub distance: f32,
-    pub itype: IntersectionType
-}
 
 pub struct Map {
     layout: String,
@@ -22,18 +10,6 @@ pub struct Map {
     pub(crate) h: i32,
     pub(crate) tsize: i32,
     pub(crate) textures: HashMap<char, Texture2D>
-}
-
-impl Intersection {
-    pub fn new(gpos: IVec2, distance: f32, itype: IntersectionType) -> Self {
-        Self { gpos, distance, itype }
-    }
-}
-
-impl Default for Intersection {
-    fn default() -> Self {
-        Self { gpos: IVec2::new(0, 0), distance: 0., itype: IntersectionType::Horizontal }
-    }
 }
 
 impl Map {
@@ -81,7 +57,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, (closest - ray.orig).length(), IntersectionType::Horizontal);
+                return Intersection::new(IntersectionType::WallHorizontal { gpos }, (closest - ray.orig).length());
             }
 
             let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
@@ -103,7 +79,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, (closest - ray.orig).length(), IntersectionType::Vertical);
+                return Intersection::new(IntersectionType::WallVertical { gpos }, (closest - ray.orig).length());
             }
 
             let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
