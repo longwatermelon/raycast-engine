@@ -1,34 +1,43 @@
 use crate::util::Ray;
-use macroquad::math::{Vec2, IVec2};
+use macroquad::prelude::*;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
+use std::collections::HashMap;
+
+#[derive(PartialEq)]
+pub enum IntersectionType {
+    Horizontal,
+    Vertical
+}
 
 pub struct Intersection {
     pub gpos: IVec2,
-    pub distance: f32
+    pub distance: f32,
+    pub itype: IntersectionType
 }
 
 pub struct Map {
     layout: String,
     pub(crate) w: i32,
     pub(crate) h: i32,
-    pub(crate) tsize: i32
+    pub(crate) tsize: i32,
+    pub(crate) textures: HashMap<char, Texture2D>
 }
 
 impl Intersection {
-    pub fn new(gpos: IVec2, distance: f32) -> Self {
-        Self { gpos, distance }
+    pub fn new(gpos: IVec2, distance: f32, itype: IntersectionType) -> Self {
+        Self { gpos, distance, itype }
     }
 }
 
 impl Default for Intersection {
     fn default() -> Self {
-        Self { gpos: IVec2::new(0, 0), distance: 0. }
+        Self { gpos: IVec2::new(0, 0), distance: 0., itype: IntersectionType::Horizontal }
     }
 }
 
 impl Map {
-    pub fn new(path: &str) -> Self {
+    pub fn new(path: &str, textures: HashMap<char, Texture2D>) -> Self {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
 
@@ -47,7 +56,8 @@ impl Map {
             layout,
             w,
             h,
-            tsize: 50
+            tsize: 50,
+            textures
         }
     }
 
@@ -71,7 +81,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, (closest - ray.orig).length());
+                return Intersection::new(gpos, (closest - ray.orig).length(), IntersectionType::Horizontal);
             }
 
             let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
@@ -93,7 +103,7 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(gpos, (closest - ray.orig).length());
+                return Intersection::new(gpos, (closest - ray.orig).length(), IntersectionType::Vertical);
             }
 
             let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
@@ -139,7 +149,7 @@ mod tests {
 
     #[test]
     fn gpos() {
-        let map: Map = Map::new("res/map");
+        let map: Map = Map::new("res/map", HashMap::new());
         assert_eq!(map.gpos(Vec2::new(160., 150.)), IVec2::new(3, 3));
         assert_eq!(map.gpos(Vec2::new(200., 140.)), IVec2::new(4, 2));
     }

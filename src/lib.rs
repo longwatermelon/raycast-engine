@@ -2,7 +2,7 @@ pub mod util;
 pub mod map;
 
 use util::Ray;
-use map::{Map, Intersection};
+use map::{Map, Intersection, IntersectionType};
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
@@ -55,9 +55,34 @@ pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
 
 fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
     let mut ins: Intersection = map.cast_ray(ray);
+    let endp: Vec2 = ray.along(ins.distance);
     ins.distance *= f32::cos(util::restrict_angle(cam_angle - ray.angle));
+
     let h: f32 = (map.tsize as f32 * scrh as f32) / ins.distance;
     let offset: f32 = (scrh as f32 - h) / 2.;
-    draw_line(col as f32, offset, col as f32, offset + h, 1., RED);
+
+    let texture: &Texture2D = map.textures.get(&map.at(ins.gpos.x, ins.gpos.y)).unwrap();
+    let texture_index: f32 = if ins.itype == IntersectionType::Horizontal {
+        endp.x
+    } else {
+        endp.y
+    };
+
+    draw_texture_ex(
+        *texture,
+        col as f32, offset, WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::new(1., h)),
+            source: Some(
+                Rect::new(
+                    (texture_index % map.tsize as f32) / map.tsize as f32 * texture.width(),
+                    0.,
+                    1.,
+                    texture.height()
+                )
+            ),
+            ..Default::default()
+        }
+    );
 }
 

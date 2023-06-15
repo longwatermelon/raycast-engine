@@ -1,10 +1,15 @@
 use raycast::map::Map;
 use raycast::util::Ray;
 use macroquad::prelude::*;
+use std::collections::HashMap;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let map: Map = Map::new("res/map");
+    let mut textures: HashMap<char, Texture2D> = HashMap::new();
+    textures.insert('0', Texture2D::from_file_with_format(include_bytes!("../res/wall.png"), Some(ImageFormat::Png)));
+    textures.insert('5', Texture2D::from_file_with_format(include_bytes!("../res/wall.png"), Some(ImageFormat::Png)));
+
+    let map: Map = Map::new("res/map", textures);
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
     loop {
