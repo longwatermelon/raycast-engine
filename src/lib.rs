@@ -10,7 +10,7 @@ use item::Item;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, ray: Ray, entities: &Vec<Entity>) {
+pub fn render(map: &Map, entities: &Vec<Entity>, ray: Ray) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 

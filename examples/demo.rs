@@ -20,51 +20,42 @@ async fn main() {
         Item::new("gun", "examples/res/gun.png").await,
         Item::new("knife", "examples/res/knife.png").await
     ];
+    let mut selected_index: usize = 0;
 
     let shooting_gun: Texture2D = Texture2D::from_file_with_format(include_bytes!("res/gun-shoot.png"), Some(ImageFormat::Png));
 
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
     let mut prev_mx: f32 = mouse_position().0;
+
     let mut grabbed: bool = true;
     set_cursor_grab(true);
     show_mouse(false);
 
     loop {
-        // Fps camera
         if is_key_pressed(KeyCode::Tab) {
             grabbed = !grabbed;
             set_cursor_grab(grabbed);
             show_mouse(!grabbed);
         }
 
-        if is_key_down(KeyCode::W) {
-            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(2.));
-        }
-
-        if is_key_down(KeyCode::S) {
-            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(-2.));
-        }
-
-        if is_key_down(KeyCode::A) {
-            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, raycast::util::restrict_angle(cam.angle - PI / 2.)).along(1.));
-        }
-
-        if is_key_down(KeyCode::D) {
-            cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, raycast::util::restrict_angle(cam.angle - PI / 2.)).along(-1.));
-        }
-
-        let mx: f32 = mouse_position().0;
-        cam.angle += (mx - prev_mx) / 200.;
-        cam.angle = raycast::util::restrict_angle(cam.angle);
-        prev_mx = mx;
+        // Controls
+        raycast::util::fps_camera_controls(&map, &mut cam, 2.);
+        raycast::util::fps_camera_rotation(&mut cam, &mut prev_mx, 1.);
 
         // Entity move towards player
         entities[0].pos = raycast::util::move_towards_collidable(&map, entities[0].pos, cam.orig, 1.);
 
         // Shooting mechanic
         if is_mouse_button_pressed(MouseButton::Left) {
-            items[0].texswap(&shooting_gun, 0.1);
+            // Animations
+            match selected_index {
+                0 => items[selected_index].texswap(&shooting_gun, 0.1),
+                1 => items[selected_index].jab(Vec2::new(0., -20.), 0.05),
+                _ => ()
+            }
+
+            // Raycast
             let ins: Intersection = raycast::cast_ray(&map, &entities, cam);
             match ins.itype {
                 IntersectionType::Entity {..} => println!("Hit entity"),
@@ -74,20 +65,17 @@ async fn main() {
 
         // Equip item
         if is_key_pressed(KeyCode::Key1) {
+            selected_index = 0;
             raycast::equip_item(&mut items, "gun");
         }
 
         if is_key_pressed(KeyCode::Key2) {
+            selected_index = 1;
             raycast::equip_item(&mut items, "knife");
         }
 
-        // Animation demo
-        if is_key_pressed(KeyCode::Space) {
-            items[1].jab(Vec2::new(0., -100.), 0.01);
-        }
-
         clear_background(BLACK);
-        raycast::render(&map, cam, &entities);
+        raycast::render(&map, &entities, cam);
         raycast::render_item(&mut items);
         next_frame().await;
     }
