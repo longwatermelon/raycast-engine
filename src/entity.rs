@@ -15,8 +15,8 @@ impl Entity {
 }
 
 pub fn intersect(ray: Ray, pos: Vec2) -> Option<Intersection> {
-    let p1: Vec2 = pos + Ray::new(pos, util::restrict_angle(ray.angle - PI / 2.)).along(10.);
-    let p2: Vec2 = pos + Ray::new(pos, util::restrict_angle(ray.angle + PI / 2.)).along(10.);
+    let p1: Vec2 = Ray::new(pos, util::restrict_angle(ray.angle - PI / 2.)).along(10.);
+    let p2: Vec2 = Ray::new(pos, util::restrict_angle(ray.angle + PI / 2.)).along(10.);
 
     let v1: Vec2 = ray.orig - p1;
     let v2: Vec2 = p2 - p1;

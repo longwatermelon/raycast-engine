@@ -22,8 +22,8 @@ pub fn render(map: &Map, ray: Ray, scrw: i32, scrh: i32, entities: Vec<Entity>) 
 pub fn render_2d(map: &Map, ray: Ray, scrw: i32, scrh: i32) {
     let w: f32 = scrw as f32 / map.w as f32;
     let h: f32 = scrh as f32 / map.h as f32;
-    for y in 0..map.h {
-        for x in 0..map.w {
+    for y in 0..map.h as i32 {
+        for x in 0..map.w as i32 {
             if map.at(x, y) != '.' {
                 draw_rectangle(
                     x as f32 * w,

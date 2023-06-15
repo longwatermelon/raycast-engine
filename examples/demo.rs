@@ -12,15 +12,11 @@ async fn main() {
     textures.insert('5', Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(ImageFormat::Png)));
     textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
-    let map: Map = Map::new("examples/res/map", textures);
+    let mut map: Map = Map::new("examples/res/map", textures);
+    let entities: Vec<Entity> = map.filter_entities(&['e']);
+
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
-
-    // let entities: Vec<Entity> = vec![
-    //     Entity::new(Vec2::new(200., 200.), 'e'),
-    //     Entity::new(Vec2::new(300., 200.), 'e')
-    // ];
-
-    let entities: Vec<Entity> = (0..20).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
+    // let entities: Vec<Entity> = (0..20).map(|i| Entity::new(Vec2::new(200. + i as f32 * 10., 200.), 'e')).collect();
 
     let mut prev_mx: f32 = mouse_position().0;
     let mut grabbed: bool = true;
@@ -52,11 +48,11 @@ async fn main() {
 
         let mx: f32 = mouse_position().0;
         cam.angle += (mx - prev_mx) / 200.;
+        cam.angle = raycast::util::restrict_angle(cam.angle);
         prev_mx = mx;
 
         clear_background(BLACK);
 
-        cam.angle = raycast::util::restrict_angle(cam.angle);
         raycast::render(&map, cam, 800, 800, entities.clone());
 
         next_frame().await;
