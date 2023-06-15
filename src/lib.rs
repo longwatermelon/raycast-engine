@@ -90,34 +90,49 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32) {
 }
 
 fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, entities: Vec<Entity>) {
-    let mut src: Rect = Rect::default();
-    src.x = 0.;
-    src.y = 0.;
-    src.w = 1.;
-    src.h = 100.;
+    // let mut src: Rect = Rect::default();
+    // src.x = 0.;
+    // src.y = 0.;
+    // src.w = 1.;
+    // src.h = 100.;
 
-    let mut dst: Rect = Rect::default();
-    dst.x = col as f32;
-    dst.w = 1.;
+    // let mut dst: Rect = Rect::default();
+    // dst.x = col as f32;
+    // dst.w = 1.;
 
-    let mut vins: Vec<Intersection> = entities
+    let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
-        .map(|e| entity::intersect(ray, e.pos))
-        .filter(|x| x.is_some())
-        .map(|t| t.unwrap())
+        .map(|e| (e.clone(), entity::intersect(ray, e.pos)))
+        .filter(|x| x.1.is_some())
+        .map(|t| (t.0, t.1.unwrap()))
         .collect();
 
     // Sort in descending, render farther entities first
-    vins.sort_by(|a, b| b.distance.partial_cmp(&a.distance).unwrap());
+    vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-    for ins in &vins {
+    for (ent, ins) in &vins {
         let h: f32 = (25. * scrh as f32) / ins.distance;
         let offset: f32 = scrh as f32 / 2.;
-        dst.y = offset;
-        dst.h = h;
 
-        draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
+        let src: Rect = Rect::new(
+            ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
+            0.,
+            1.,
+            map.textures.get(&ent.texture).unwrap().height()
+        );
+        let dst: Rect = Rect::new(col as f32, offset, 1., h);
+
+        // draw_line(dst.x, dst.y, dst.x, dst.y + dst.h, 1., RED);
+        draw_texture_ex(
+            *map.textures.get(&ent.texture).unwrap(),
+            dst.x, dst.y, WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(dst.w, dst.h)),
+                source: Some(src),
+                ..Default::default()
+            }
+        );
     }
 
     // if let Some(distance) = entity::intersect(ray, Vec2::new(200., 200.)) {
