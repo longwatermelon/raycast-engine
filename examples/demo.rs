@@ -10,7 +10,6 @@ use std::f32::consts::PI;
 async fn main() {
     let mut textures: HashMap<char, Texture2D> = HashMap::new();
     textures.insert('0', Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(ImageFormat::Png)));
-    textures.insert('5', Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(ImageFormat::Png)));
     textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
     let mut map: Map = Map::new("examples/res/map", textures);
