@@ -100,7 +100,7 @@ fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, ent
     dst.x = col as f32;
     dst.w = 1.;
 
-    let mut distances: Vec<f32> = entities
+    let mut vins: Vec<Intersection> = entities
         .iter()
         .cloned()
         .map(|e| entity::intersect(ray, e.pos))
@@ -108,16 +108,11 @@ fn render_entities(map: &Map, ray: Ray, cam_angle: f32, col: i32, scrh: i32, ent
         .map(|t| t.unwrap())
         .collect();
 
-    for e in &entities {
-        if let Some(distance) = entity::intersect(ray, e.pos) {
-            distances.push(distance);
-        }
-    }
     // Sort in descending, render farther entities first
-    distances.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    vins.sort_by(|a, b| b.distance.partial_cmp(&a.distance).unwrap());
 
-    for distance in distances {
-        let h: f32 = (25. * scrh as f32) / distance;
+    for ins in &vins {
+        let h: f32 = (25. * scrh as f32) / ins.distance;
         let offset: f32 = scrh as f32 / 2.;
         dst.y = offset;
         dst.h = h;

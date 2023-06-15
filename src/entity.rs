@@ -1,4 +1,4 @@
-use crate::util::{self, Ray};
+use crate::util::{self, Ray, Intersection, IntersectionType};
 use macroquad::math::Vec2;
 use std::f32::consts::PI;
 
@@ -14,7 +14,7 @@ impl Entity {
     }
 }
 
-pub fn intersect(ray: Ray, pos: Vec2) -> Option<f32> {
+pub fn intersect(ray: Ray, pos: Vec2) -> Option<Intersection> {
     let p1: Vec2 = pos + Ray::new(pos, util::restrict_angle(ray.angle - PI / 2.)).along(10.);
     let p2: Vec2 = pos + Ray::new(pos, util::restrict_angle(ray.angle + PI / 2.)).along(10.);
 
@@ -31,7 +31,12 @@ pub fn intersect(ray: Ray, pos: Vec2) -> Option<f32> {
     let t2: f32 = v1.dot(v3) / dot;
 
     if t1 >= 0. && (t2 >= 0. && t2 <= 1.) {
-        Some(t1)
+        let hit: Vec2 = ray.along(t1);
+        let dist1: f32 = (hit - p1).length();
+        let dist2: f32 = (hit - p2).length();
+        let col: f32 = dist1 / (dist1 + dist2);
+
+        Some(Intersection::new(IntersectionType::Entity { col }, t1))
     } else {
         None
     }
