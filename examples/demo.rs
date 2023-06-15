@@ -51,15 +51,10 @@ async fn main() {
         cam.angle = raycast::util::restrict_angle(cam.angle);
         prev_mx = mx;
 
-        let angle_towards_player: f32 = f32::atan2(
-            cam.orig.y - entities[0].pos.y, cam.orig.x - entities[0].pos.x
-        );
-        entities[0].pos = map.move_collidable(entities[0].pos, Ray::new(entities[0].pos, raycast::util::restrict_angle(angle_towards_player)).along(1.));
+        entities[0].pos = raycast::util::move_towards_collidable(&map, entities[0].pos, cam.orig, 1.);
 
         clear_background(BLACK);
-
         raycast::render(&map, cam, 800, 800, entities.clone());
-
         next_frame().await;
     }
 }
