@@ -4,7 +4,6 @@ use raycast::entity::Entity;
 use raycast::item::Item;
 use macroquad::prelude::*;
 use std::collections::HashMap;
-use std::f32::consts::PI;
 
 #[macroquad::main(window_conf)]
 async fn main() {
@@ -43,7 +42,9 @@ async fn main() {
         raycast::util::fps_camera_rotation(&mut cam, &mut prev_mx, 1.);
 
         // Entity move towards player
-        entities[0].pos = raycast::util::move_towards_collidable(&map, entities[0].pos, cam.orig, 1.);
+        for ent in &mut entities {
+            ent.pos = raycast::util::move_towards_collidable(&map, ent.pos, cam.orig, 1.);
+        }
 
         // Shooting mechanic
         if is_mouse_button_pressed(MouseButton::Left) {
@@ -57,7 +58,7 @@ async fn main() {
             // Raycast
             let ins: Intersection = raycast::cast_ray(&map, &entities, cam);
             match ins.itype {
-                IntersectionType::Entity {..} => println!("Hit entity"),
+                IntersectionType::Entity { index, .. } => println!("Hit entity {}", index),
                 _ => println!("Hit wall")
             }
         }

@@ -78,11 +78,14 @@ pub fn equip_item(items: &mut Vec<Item>, item_name: &str) {
 pub fn cast_ray(map: &Map, entities: &Vec<Entity>, ray: Ray) -> Intersection {
     let map_ins: Intersection = map.cast_ray(ray);
 
-    let mut ent_ins: Intersection = Intersection::new(IntersectionType::Entity { col: 0. }, f32::INFINITY);
-    for ent in entities {
-        if let Some(ins) = entity::intersect(ray, ent.pos) {
+    let mut ent_ins: Intersection = Intersection::new(IntersectionType::Entity { index: 0, col: 0. }, f32::INFINITY);
+    for (i, ent) in entities.iter().enumerate() {
+        if let Some(ins) = ent.intersect(ray) {
             if ins.distance < ent_ins.distance {
                 ent_ins = ins;
+                if let IntersectionType::Entity { index, .. } = &mut ent_ins.itype {
+                    *index = i;
+                }
             }
         }
     }
@@ -139,7 +142,7 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_d
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
-        .map(|e| (e.clone(), entity::intersect(ray, e.pos)))
+        .map(|e| (e.clone(), e.intersect(ray)))
         .filter(|x| x.1.is_some())
         .filter(|x| x.1.as_ref().unwrap().distance < wall_dist)
         .map(|t| (t.0, t.1.unwrap()))

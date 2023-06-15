@@ -7,7 +7,7 @@ use std::f32::consts::PI;
 pub enum IntersectionType {
     WallHorizontal { gpos: IVec2 },
     WallVertical { gpos: IVec2 },
-    Entity { col: f32 }
+    Entity { index: usize, col: f32 }
 }
 
 pub struct Intersection {
@@ -36,7 +36,14 @@ impl Intersection {
 
     pub fn entity_col(&self) -> f32 {
         match self.itype {
-            IntersectionType::Entity { col } => col,
+            IntersectionType::Entity { col, .. } => col,
+            _ => panic!()
+        }
+    }
+
+    pub fn entity_index(&self) -> usize {
+        match self.itype {
+            IntersectionType::Entity { index, .. } => index,
             _ => panic!()
         }
     }
