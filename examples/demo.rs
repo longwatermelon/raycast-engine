@@ -1,13 +1,17 @@
 use raycast::map::Map;
+use raycast::util::Ray;
 use macroquad::prelude::*;
+use glm::Vec2;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let _map: Map = Map::new("res/map");
+    let map: Map = Map::new("res/map");
+    let cam: Ray = Ray::new(Vec2::new(160., 160.), 1.5);
+
     loop {
         clear_background(BLACK);
 
-        raycast::render();
+        raycast::render(&map, cam, 800, 600);
 
         next_frame().await;
     }
