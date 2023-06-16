@@ -152,8 +152,8 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_d
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
     for (ent, ins) in &vins {
-        let h: f32 = (25. * screen_height()) / ins.distance;
-        let offset: f32 = screen_height() / 2.;
+        let h: f32 = (50. * screen_height()) / ins.distance;
+        let offset: f32 = (screen_height() as f32 - h) / 2.;
 
         let src: Rect = Rect::new(
             ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
