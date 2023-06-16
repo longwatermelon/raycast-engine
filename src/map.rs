@@ -113,8 +113,8 @@ impl Map {
 
     pub fn move_collidable(&self, before: Vec2, after: Vec2) -> Vec2 {
         let offset: Vec2 = Vec2::new(
-            if after.x - before.x > 0. { 5. } else { -5. },
-            if after.y - before.y > 0. { 5. } else { -5. }
+            if after.x - before.x > 0. { 10. } else { -10. },
+            if after.y - before.y > 0. { 10. } else { -10. }
         );
 
         let gpos: IVec2 = self.gpos(before + offset);
