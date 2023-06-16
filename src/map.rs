@@ -38,16 +38,16 @@ impl Map {
         }
     }
 
-    pub fn filter_entities(&mut self, entity_tags: &[char]) -> Vec<Entity> {
+    pub fn filter_entities(&mut self, entity_tags: &[char], entity_sizes: &[(f32, f32)]) -> Vec<Entity> {
         let mut res: Vec<Entity> = Vec::new();
 
         for y in 0..self.h as i32 {
             for x in 0..self.w as i32 {
-                if entity_tags.contains(&self.at(x, y)) {
+                if let Some(index) = entity_tags.iter().position(|&e| e == self.at(x, y)) {
                     res.push(Entity::new(Vec2::new(
                         x as f32 * self.tsize + self.tsize / 2.,
                         y as f32 * self.tsize + self.tsize / 2.),
-                        self.at(x, y))
+                        self.at(x, y), entity_sizes[index])
                     );
                 }
             }

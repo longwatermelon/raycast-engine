@@ -12,7 +12,7 @@ async fn main() {
     textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
     let mut map: Map = Map::new("examples/res/map", textures);
-    let mut entities: Vec<Entity> = map.filter_entities(&['e']);
+    let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
     let mut items: Vec<Item> = vec![
         Item::new("gun", "examples/res/gun.png").await,

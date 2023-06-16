@@ -5,17 +5,19 @@ use std::f32::consts::PI;
 #[derive(Clone)]
 pub struct Entity {
     pub pos: Vec2,
-    pub texture: char
+    pub texture: char,
+    pub w: f32,
+    pub h: f32
 }
 
 impl Entity {
-    pub fn new(pos: Vec2, texture: char) -> Self {
-        Self { pos, texture }
+    pub fn new(pos: Vec2, texture: char, size: (f32, f32)) -> Self {
+        Self { pos, texture, w: size.0, h: size.1 }
     }
 
     pub fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        let p1: Vec2 = Ray::new(self.pos, util::restrict_angle(ray.angle - PI / 2.)).along(10.);
-        let p2: Vec2 = Ray::new(self.pos, util::restrict_angle(ray.angle + PI / 2.)).along(10.);
+        let p1: Vec2 = Ray::new(self.pos, util::restrict_angle(ray.angle - PI / 2.)).along(self.w / 2.);
+        let p2: Vec2 = Ray::new(self.pos, util::restrict_angle(ray.angle + PI / 2.)).along(self.w / 2.);
 
         let v1: Vec2 = ray.orig - p1;
         let v2: Vec2 = p2 - p1;
