@@ -137,6 +137,11 @@ impl Map {
         self.layout.chars().nth((gy * self.w as i32 + gx) as usize).unwrap_or(' ')
     }
 
+    pub fn set(&mut self, gx: i32, gy: i32, c: char) {
+        let index: usize = gy as usize * self.w as usize + gx as usize;
+        self.layout.replace_range(index..index + 1, c.to_string().as_str());
+    }
+
     pub fn out_of_bounds(&self, gpos: IVec2) -> bool {
         gpos.x < 0 || gpos.x >= self.w as i32 || gpos.y < 0 || gpos.y >= self.h as i32
     }
