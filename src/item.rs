@@ -17,8 +17,8 @@ pub struct Item {
 }
 
 impl Item {
-    pub async fn new(name: &str, path: &str) -> Self {
-        let texture: Texture2D = Texture2D::from_image(&load_image(path).await.unwrap());
+    pub fn new(name: &str, bytes: &[u8]) -> Self {
+        let texture: Texture2D = Texture2D::from_file_with_format(bytes, Some(ImageFormat::Png));
         let pos: Vec2 = Vec2::new(screen_width() - texture.width(), screen_height());
         Self {
             name: String::from(name),

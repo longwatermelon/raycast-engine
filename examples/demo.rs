@@ -15,8 +15,8 @@ async fn main() {
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
     let mut items: Vec<Item> = vec![
-        Item::new("gun", "examples/res/gun.png").await,
-        Item::new("knife", "examples/res/knife.png").await
+        Item::new("gun", include_bytes!("res/gun.png")),
+        Item::new("knife", include_bytes!("res/knife.png")),
     ];
     let mut selected_index: usize = 0;
 
