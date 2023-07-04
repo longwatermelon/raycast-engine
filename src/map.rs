@@ -38,6 +38,16 @@ impl Map {
         }
     }
 
+    pub fn from(layout: &str, textures: HashMap<char, Texture2D>, w: f32, h: f32) -> Self {
+        Self {
+            layout: String::from(layout),
+            w,
+            h,
+            tsize: 50.,
+            textures
+        }
+    }
+
     pub fn filter_entities(&mut self, entity_tags: &[char], entity_sizes: &[(f32, f32)]) -> Vec<Entity> {
         let mut res: Vec<Entity> = Vec::new();
 
