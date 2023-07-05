@@ -4,7 +4,6 @@ use macroquad::prelude::*;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
-use std::ops::Index;
 
 #[derive(Debug)]
 pub struct Map {
