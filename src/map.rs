@@ -4,7 +4,9 @@ use macroquad::prelude::*;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
+use std::ops::Index;
 
+#[derive(Debug)]
 pub struct Map {
     layout: String,
     pub(crate) w: f32,
@@ -38,14 +40,21 @@ impl Map {
         }
     }
 
-    pub fn from(layout: &str, textures: HashMap<char, Texture2D>, w: f32, h: f32) -> Self {
+    pub fn from(layout: &str, textures: HashMap<char, Texture2D>) -> Self {
+        let w: usize = layout.find('\n').unwrap();
+        let filtered_layout: String = layout.replace('\n', "");
+        let h: usize = filtered_layout.len() / w;
         Self {
-            layout: String::from(layout),
-            w,
-            h,
+            layout: filtered_layout,
+            w: w as f32,
+            h: h as f32,
             tsize: 50.,
             textures
         }
+    }
+
+    pub fn from_bytes(bytes: &[u8], textures: HashMap<char, Texture2D>) -> Self {
+        Map::from(std::str::from_utf8(bytes).unwrap(), textures)
     }
 
     pub fn filter_entities(&mut self, entity_tags: &[char], entity_sizes: &[(f32, f32)]) -> Vec<Entity> {
