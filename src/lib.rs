@@ -15,7 +15,7 @@ pub fn render(map: &Map, entities: &Vec<Entity>, ray: Ray, fog: Option<f32>) {
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     for i in 0..screen_width() as i32 {
-        let angle: f32 = start_angle + (i as f32 / screen_height() * angle_range);
+        let angle: f32 = start_angle + (i as f32 / screen_width() * angle_range);
         let wall_dist: f32 = render_wall(map, Ray::new(ray.orig, angle), ray.angle, i, fog);
         render_entities(map, Ray::new(ray.orig, angle), i, entities, wall_dist, fog);
     }
