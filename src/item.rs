@@ -1,5 +1,4 @@
 use macroquad::prelude::*;
-use std::time::Instant;
 
 pub enum Animation {
     None,
@@ -13,7 +12,7 @@ pub struct Item {
     texture: Texture2D,
     pos: Vec2,
     animation: Animation,
-    animation_start: Instant
+    animation_start: f64,
 }
 
 impl Item {
@@ -25,26 +24,26 @@ impl Item {
             texture,
             pos,
             animation: Animation::None,
-            animation_start: Instant::now()
+            animation_start: -100.,
         }
     }
 
     pub fn unequip(&mut self) {
         self.end_animation();
         self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height()) };
-        self.animation_start = Instant::now();
+        self.animation_start = get_time();
     }
 
     pub fn equip(&mut self) {
         self.end_animation();
         self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height() - self.texture.height()) };
-        self.animation_start = Instant::now();
+        self.animation_start = get_time();
     }
 
     pub fn jab(&mut self, diff: Vec2, t: f32) {
         self.end_animation();
         self.animation = Animation::Jab { diff, t };
-        self.animation_start = Instant::now();
+        self.animation_start = get_time();
     }
 
     fn end_jab(&mut self) {
@@ -56,7 +55,7 @@ impl Item {
         self.end_animation();
         self.animation = Animation::TextureSwap { orig: self.texture, t };
         self.texture = texture.clone();
-        self.animation_start = Instant::now();
+        self.animation_start = get_time();
     }
 
     fn end_texswap(&mut self) {
@@ -79,16 +78,16 @@ impl Item {
             Animation::None => (),
             Animation::EaseIn { target } => self.pos += (target - self.pos) / 5.,
             Animation::Jab { diff, t } => {
-                let elapsed: f32 = self.animation_start.elapsed().as_millis() as f32 / 1000.;
-                if elapsed < t {
+                let elapsed: f64 = get_time() - self.animation_start;
+                if elapsed < t as f64 {
                     self.pos += diff;
                 } else {
                     self.end_jab();
                 }
             },
             Animation::TextureSwap { t, .. } => {
-                let elapsed: f32 = self.animation_start.elapsed().as_millis() as f32 / 1000.;
-                if elapsed > t {
+                let elapsed: f64 = get_time() - self.animation_start;
+                if elapsed > t as f64 {
                     self.end_texswap();
                 }
             }
