@@ -4,9 +4,16 @@ use macroquad::prelude::*;
 use std::f32::consts::PI;
 
 #[derive(PartialEq)]
+pub enum Direction {
+    North,
+    East,
+    South,
+    West,
+}
+
+#[derive(PartialEq)]
 pub enum IntersectionType {
-    WallHorizontal { gpos: IVec2 },
-    WallVertical { gpos: IVec2 },
+    Wall { gpos: IVec2, face: Direction },
     Entity { index: usize, col: f32 }
 }
 
@@ -28,8 +35,7 @@ impl Intersection {
 
     pub fn wall_gpos(&self) -> IVec2 {
         match self.itype {
-            IntersectionType::WallVertical { gpos } |
-            IntersectionType::WallHorizontal { gpos } => gpos,
+            IntersectionType::Wall { gpos, .. } => gpos,
             _ => panic!()
         }
     }

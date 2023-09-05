@@ -3,7 +3,7 @@ pub mod map;
 pub mod entity;
 pub mod item;
 
-use util::{Ray, Intersection, IntersectionType};
+use util::{Ray, Intersection, IntersectionType, Direction};
 use entity::Entity;
 use map::Map;
 use item::Item;
@@ -106,7 +106,10 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, fog: Option<f32>) 
     let offset: f32 = (screen_height() as f32 - h) / 2.;
 
     let texture: &Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
-    let texture_index: f32 = if matches!(ins.itype, IntersectionType::WallHorizontal {..}) {
+    let IntersectionType::Wall { face, .. } = ins.itype else { unreachable!() };
+    // Horizontal walls only have endp.x change, vertical walls only have endp.y change
+    // Horizontal walls collide by north and south
+    let texture_index: f32 = if matches!(face, Direction::South | Direction::North) {
         endp.x
     } else {
         endp.y

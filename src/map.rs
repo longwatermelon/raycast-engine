@@ -1,4 +1,4 @@
-use crate::util::{Ray, Intersection, IntersectionType};
+use crate::util::{Ray, Intersection, IntersectionType, Direction};
 use crate::entity::Entity;
 use macroquad::prelude::*;
 use std::fs::File;
@@ -98,7 +98,8 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(IntersectionType::WallHorizontal { gpos }, (closest - ray.orig).length());
+                let face: Direction = if ray.dir().y < 0. { Direction::South } else { Direction::North };
+                return Intersection::new(IntersectionType::Wall { gpos, face }, (closest - ray.orig).length());
             }
 
             let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
@@ -120,7 +121,8 @@ impl Map {
             }
 
             if self.out_of_bounds(gpos) || self.at(gpos.x, gpos.y) != '.' {
-                return Intersection::new(IntersectionType::WallVertical { gpos }, (closest - ray.orig).length());
+                let face: Direction = if ray.dir().x < 0. { Direction::East } else { Direction::West };
+                return Intersection::new(IntersectionType::Wall { gpos, face }, (closest - ray.orig).length());
             }
 
             let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
