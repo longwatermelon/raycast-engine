@@ -181,4 +181,3 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_d
         );
     }
 }
-

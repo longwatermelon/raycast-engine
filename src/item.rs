@@ -98,4 +98,3 @@ impl Item {
         draw_texture(self.texture, self.pos.x, self.pos.y, WHITE);
     }
 }
-

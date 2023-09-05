@@ -176,4 +176,3 @@ mod tests {
         assert_eq!(map.gpos(Vec2::new(200., 140.)), IVec2::new(4, 2));
     }
 }
-

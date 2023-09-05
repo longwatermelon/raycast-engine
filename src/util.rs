@@ -109,4 +109,3 @@ pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_x: &mut f32, sensitivity: f
     cam.angle = restrict_angle(cam.angle);
     *prev_mouse_x = mx;
 }
-
