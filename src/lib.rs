@@ -10,7 +10,7 @@ use item::Item;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, entities: &Vec<Entity>, ray: Ray, fog: Option<f32>) {
+pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>) {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
@@ -141,7 +141,7 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, fog: Option<f32>) 
     ins.distance
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &Vec<Entity>, wall_dist: f32, fog: Option<f32>) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
