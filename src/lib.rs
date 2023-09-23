@@ -122,13 +122,13 @@ fn render_wall(map: &Map, ray: Ray, cam_angle: f32, col: i32, fog: Option<f32>) 
     };
 
     draw_texture_ex(
-        *texture,
+        texture,
         col as f32, offset, Color::new(shading, shading, shading, 1.),
         DrawTextureParams {
             dest_size: Some(Vec2::new(1., h)),
             source: Some(
                 Rect::new(
-                    (texture_index % map.tsize as f32) / map.tsize as f32 * texture.width(),
+                    (texture_index % map.tsize) / map.tsize * texture.width(),
                     0.,
                     1.,
                     texture.height()
@@ -174,7 +174,7 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
             1.
         };
         draw_texture_ex(
-            *map.textures.get(&ent.texture).unwrap(),
+            map.textures.get(&ent.texture).unwrap(),
             dst.x, dst.y, Color::new(shading, shading, shading, 1.),
             DrawTextureParams {
                 dest_size: Some(Vec2::new(dst.w, dst.h)),

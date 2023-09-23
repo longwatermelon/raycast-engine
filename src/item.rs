@@ -53,14 +53,14 @@ impl Item {
 
     pub fn texswap(&mut self, texture: &Texture2D, t: f32) {
         self.end_animation();
-        self.animation = Animation::TextureSwap { orig: self.texture, t };
+        self.animation = Animation::TextureSwap { orig: self.texture.clone(), t };
         self.texture = texture.clone();
         self.animation_start = get_time();
     }
 
     fn end_texswap(&mut self) {
-        if let Animation::TextureSwap { orig, .. } = self.animation {
-            self.texture = orig;
+        if let Animation::TextureSwap { orig, .. } = &self.animation {
+            self.texture = orig.clone();
         }
     }
 
@@ -95,6 +95,6 @@ impl Item {
     }
 
     pub fn render(&self) {
-        draw_texture(self.texture, self.pos.x, self.pos.y, WHITE);
+        draw_texture(&self.texture, self.pos.x, self.pos.y, WHITE);
     }
 }
