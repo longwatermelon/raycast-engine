@@ -12,6 +12,7 @@ async fn main() {
     textures.insert('e', Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(ImageFormat::Png)));
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
+    map.set_floor_tex(Texture2D::from_file_with_format(include_bytes!("res/floor.png"), Some(ImageFormat::Png)));
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
     let mut items: Vec<Item> = vec![

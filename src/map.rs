@@ -11,7 +11,8 @@ pub struct Map {
     pub(crate) w: f32,
     pub(crate) h: f32,
     pub(crate) tsize: f32,
-    pub(crate) textures: HashMap<char, Texture2D>
+    pub(crate) textures: HashMap<char, Texture2D>,
+    pub(crate) floor_tex: Texture2D,
 }
 
 impl Map {
@@ -35,7 +36,8 @@ impl Map {
             w,
             h,
             tsize: 50.,
-            textures
+            textures,
+            floor_tex: Texture2D::empty(),
         }
     }
 
@@ -48,8 +50,13 @@ impl Map {
             w: w as f32,
             h: h as f32,
             tsize: 50.,
-            textures
+            textures,
+            floor_tex: Texture2D::empty(),
         }
+    }
+
+    pub fn set_floor_tex(&mut self, floor_tex: Texture2D) {
+        self.floor_tex = floor_tex;
     }
 
     pub fn from_bytes(bytes: &[u8], textures: HashMap<char, Texture2D>) -> Self {

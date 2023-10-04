@@ -3,7 +3,7 @@ use crate::map::Map;
 use macroquad::prelude::*;
 use std::f32::consts::PI;
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Direction {
     North,
     East,
@@ -11,7 +11,7 @@ pub enum Direction {
     West,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum IntersectionType {
     Wall { gpos: IVec2, face: Direction },
     Entity { index: usize, col: f32 }
