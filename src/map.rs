@@ -94,7 +94,7 @@ impl Map {
 
     fn cast_ray_h(&self, ray: Ray) -> Intersection {
         let mut closest: Vec2 = Vec2::new(0., 0.);
-        closest.y = ray.orig.y - ray.orig.y % self.tsize as f32 +
+        closest.y = ray.orig.y - ray.orig.y % self.tsize +
                         if ray.dir().y > 0. { self.tsize } else { 0. };
         closest.x = ray.orig.x + ((closest.y - ray.orig.y) / f32::tan(ray.angle));
 
@@ -109,7 +109,7 @@ impl Map {
                 return Intersection::new(IntersectionType::Wall { gpos, face }, (closest - ray.orig).length());
             }
 
-            let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize } as f32;
+            let dy: f32 = if ray.dir().y < 0. { -self.tsize } else { self.tsize };
             closest.y += dy;
             closest.x += dy / f32::tan(ray.angle);
         }
@@ -117,7 +117,7 @@ impl Map {
 
     fn cast_ray_v(&self, ray: Ray) -> Intersection {
         let mut closest: Vec2 = Vec2::new(0., 0.);
-        closest.x = ray.orig.x - ray.orig.x % self.tsize as f32 +
+        closest.x = ray.orig.x - ray.orig.x % self.tsize +
                         if ray.dir().x > 0. { self.tsize } else { 0. };
         closest.y = ray.orig.y + ((closest.x - ray.orig.x) * f32::tan(ray.angle));
 
@@ -132,7 +132,7 @@ impl Map {
                 return Intersection::new(IntersectionType::Wall { gpos, face }, (closest - ray.orig).length());
             }
 
-            let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize } as f32;
+            let dx: f32 = if ray.dir().x < 0. { -self.tsize } else { self.tsize };
             closest.x += dx;
             closest.y += dx * f32::tan(ray.angle);
         }
@@ -155,8 +155,8 @@ impl Map {
 
     pub fn gpos(&self, pos: Vec2) -> IVec2 {
         IVec2::new(
-            ((pos.x - pos.x % self.tsize as f32) / self.tsize as f32) as i32,
-            ((pos.y - pos.y % self.tsize as f32) / self.tsize as f32) as i32
+            ((pos.x - pos.x % self.tsize) / self.tsize) as i32,
+            ((pos.y - pos.y % self.tsize) / self.tsize) as i32
         )
     }
 

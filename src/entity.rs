@@ -31,7 +31,7 @@ impl Entity {
         let t1: f32 = (v2.x * v1.y - v1.x * v2.y) / dot;
         let t2: f32 = v1.dot(v3) / dot;
 
-        if t1 >= 0. && (t2 >= 0. && t2 <= 1.) {
+        if t1 >= 0. && (0f32..=1f32).contains(&t2) {
             let hit: Vec2 = ray.along(t1);
             let dist1: f32 = (hit - p1).length();
             let dist2: f32 = (hit - p2).length();
