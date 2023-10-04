@@ -31,6 +31,9 @@ async fn main() {
     set_cursor_grab(true);
     show_mouse(false);
 
+    let mut last_fps_update: f64 = get_time();
+    let mut fps: i32 = get_fps();
+
     loop {
         if is_key_pressed(KeyCode::Tab) {
             grabbed = !grabbed;
@@ -78,6 +81,13 @@ async fn main() {
         clear_background(BLACK);
         raycast::render(&map, &entities, cam, None);
         raycast::render_item(&mut items);
+
+        if get_time() - last_fps_update > 0.5 {
+            fps = get_fps();
+            last_fps_update = get_time();
+        }
+        draw_text(format!("FPS {}", fps).as_str(), 10., 20., 24., WHITE);
+
         next_frame().await;
     }
 }
