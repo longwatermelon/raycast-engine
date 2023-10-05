@@ -18,7 +18,8 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_im
         cast_ray.vangle = ray.vangle;
 
         let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
-        render_floor_and_ceil(map, cast_ray, x as i32, wall_res, fog, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, mq::screen_height() as i32, -1, fog, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
 }
@@ -74,23 +75,22 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil(map: &Map, ray: Ray, x: i32, rend_wall_result: (i32, i32), fog: Option<f32>, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
-    // let fov: f32 = PI / 2.;
-    let fov: f32 = 1.;
-    for y in rend_wall_result.0.max(0).min(mq::screen_height() as i32)..(mq::screen_height() as i32) {
+    for y in y0.max(0).min(mq::screen_height() as i32)..y1.max(0).min(mq::screen_height() as i32) {
         // Find ray angles corresponding to screen pixel
-        let ha: f32 = (x as f32 / mq::screen_width()) * fov - (fov / 2.);
-        let va: f32 = (y as f32 / mq::screen_height()) * fov - (fov / 2.);
+        let ha: f32 = (x as f32 / mq::screen_width()) - 0.5;
+        let va: f32 = (y as f32 / mq::screen_height()) - 0.5;
         // x = ray.angle, y = angle looking down, z is useless
-        let dir: Vec3 = Vec3::new(ha, f32::sin(va + ray.vangle), 1.).normalize();
+        let dir: Vec3 = Vec3::new(f32::sin(ha), f32::sin(va + ray.vangle), 1.).normalize();
 
         // How many `dir.y` it takes to get to the floor
-        let tvert: f32 = (map.tsize / 2.) / dir.y;
+        let tvert: f32 = -pitch_direction as f32 * (map.tsize / 2.) / dir.y;
         let new_pos: Vec2 = ray.along(tvert);
         let distance: f32 = ray.orig.distance(new_pos);
         let fog: f32 = calculate_fog(fog, distance);
 
+        // Floor
         let tc: Vec2 = new_pos % Vec2::new(map.floor_tex.width() as f32, map.floor_tex.height() as f32);
         let color: mq::Color = map.floor_tex.get_pixel(tc.x as u32, tc.y as u32);
         out_img.set_pixel(x as u32, y as u32, mq::Color::new(
