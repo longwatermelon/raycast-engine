@@ -8,7 +8,7 @@ use entity::Entity;
 use map::Map;
 use item::Item;
 use macroquad::prelude as mq;
-use glam::Vec2;
+use glam::{Vec2, Vec3};
 use std::f32::consts::PI;
 
 pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
@@ -16,7 +16,9 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_im
     for (x, (ins, angle)) in vins.iter().enumerate() {
         let mut cast_ray: Ray = Ray::new(ray.orig, *angle);
         cast_ray.vangle = ray.vangle;
-        render_wall(map, ins, cast_ray, x as i32, fog, out_img);
+
+        let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
+        render_floor_and_ceil(map, cast_ray, x as i32, wall_res, fog, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
 }
@@ -38,7 +40,8 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
     res
 }
 
-fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) {
+/// Returns (wall bottom, wall top)
+fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) -> (i32, i32) {
     let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(PI / 2. / 2.));
     let h: i32 = ((map.tsize * mq::screen_height()) / ins.fisheye_distance) as i32;
     let offset: i32 = floor_level as i32 - (h / 2);
@@ -73,6 +76,36 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
                 color.a
             )
         );
+    }
+
+    (offset + h, offset)
+}
+
+fn render_floor_and_ceil(map: &Map, ray: Ray, x: i32, rend_wall_result: (i32, i32), fog: Option<f32>, out_img: &mut mq::Image) {
+    // From wall bottom to screen bottom
+    for y in rend_wall_result.0.max(0).min(mq::screen_height() as i32)..(mq::screen_height() as i32) {
+        // Find ray angles corresponding to screen pixel
+        let ha: f32 = (x as f32 / mq::screen_width()) - 0.5;
+        let va: f32 = (y as f32 / mq::screen_height()) - 0.5;
+        // x = ray.angle, y = angle looking down, z is useless
+        let dir: Vec3 = Vec3::new(ha, va, 1.).normalize();
+
+        // How many `dir.y` it takes to get to the floor
+        let tvert: f32 = (map.tsize / 2.) / dir.y;
+        let new_pos: Vec2 = ray.along(tvert);
+        let distance: f32 = ray.orig.distance(new_pos);
+        let fog: f32 = calculate_fog(fog.unwrap(), distance);
+
+        let texture = map.textures.get(&'0').unwrap();
+        let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
+
+        let color: mq::Color = texture.get_pixel(tc.x as u32, tc.y as u32);
+        out_img.set_pixel(x as u32, y as u32, mq::Color::new(
+            fog * color.r,
+            fog * color.g,
+            fog * color.b,
+            color.a,
+        ));
     }
 }
 
