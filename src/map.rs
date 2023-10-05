@@ -12,11 +12,11 @@ pub struct Map {
     pub(crate) w: f32,
     pub(crate) h: f32,
     pub(crate) tsize: f32,
-    pub(crate) textures: HashMap<char, mq::Texture2D>,
+    pub(crate) textures: HashMap<char, mq::Image>,
 }
 
 impl Map {
-    pub fn new(path: &str, textures: HashMap<char, mq::Texture2D>) -> Self {
+    pub fn new(path: &str, textures: HashMap<char, mq::Image>) -> Self {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
 
@@ -40,7 +40,7 @@ impl Map {
         }
     }
 
-    pub fn from(layout: &str, textures: HashMap<char, mq::Texture2D>) -> Self {
+    pub fn from(layout: &str, textures: HashMap<char, mq::Image>) -> Self {
         let w: usize = layout.find('\n').unwrap();
         let filtered_layout: String = layout.replace('\n', "");
         let h: usize = filtered_layout.len() / w;
@@ -53,7 +53,7 @@ impl Map {
         }
     }
 
-    pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Texture2D>) -> Self {
+    pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Image>) -> Self {
         Map::from(std::str::from_utf8(bytes).unwrap(), textures)
     }
 

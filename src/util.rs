@@ -20,7 +20,10 @@ pub enum IntersectionType {
 
 pub struct Intersection {
     pub itype: IntersectionType,
-    pub distance: f32
+    pub distance: f32,
+    /// Distance adjusted for fisheye effect
+    /// Manually set, default is distance
+    pub fisheye_distance: f32,
 }
 
 #[derive(Copy, Clone)]
@@ -31,7 +34,7 @@ pub struct Ray {
 
 impl Intersection {
     pub fn new(itype: IntersectionType, distance: f32) -> Self {
-        Self { itype, distance }
+        Self { itype, distance, fisheye_distance: distance }
     }
 
     pub fn wall_gpos(&self) -> IVec2 {

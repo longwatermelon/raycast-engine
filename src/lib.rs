@@ -11,11 +11,11 @@ use macroquad::prelude as mq;
 use glam::Vec2;
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>) {
+pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
     for (x, (ins, angle)) in vins.iter().enumerate() {
         let cast_ray: Ray = Ray::new(ray.orig, *angle);
-        render_wall(map, ins, cast_ray, x as i32, fog);
+        render_wall(map, ins, cast_ray, x as i32, fog, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog);
     }
 }
@@ -30,18 +30,18 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
     for i in 0..mq::screen_width() as i32 {
         let angle: f32 = start_angle + (i as f32 / mq::screen_width() * angle_range);
         let mut ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
-        ins.distance *= f32::cos(util::restrict_angle(angle - ray.angle));
+        ins.fisheye_distance *= f32::cos(util::restrict_angle(angle - ray.angle));
         res.push((ins, angle));
     }
 
     res
 }
 
-fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>) {
-    let h: f32 = (map.tsize * mq::screen_height()) / ins.distance;
-    let offset: f32 = (mq::screen_height() - h) / 2.;
+fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) {
+    let h: i32 = ((map.tsize * mq::screen_height()) / ins.fisheye_distance) as i32;
+    let offset: i32 = (mq::screen_height() as i32 - h) / 2;
 
-    let texture: &mq::Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
+    let texture: &mq::Image = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
     let IntersectionType::Wall { face, .. } = ins.itype else { unreachable!() };
     // Horizontal walls only have endp.x change, vertical walls only have endp.y change
     // Horizontal walls collide by north and south
@@ -58,24 +58,27 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
         1.
     };
 
-    mq::draw_texture_ex(
-        texture,
-        x as f32, offset, mq::Color::new(shading, shading, shading, 1.),
-        mq::DrawTextureParams {
-            dest_size: Some(mq::Vec2::new(1., h)),
-            source: Some(
-                mq::Rect::new(
-                    (texture_index % map.tsize) / map.tsize * texture.width(),
-                    0.,
-                    1.,
-                    texture.height()
+    let srcx: u32 = ((texture_index % map.tsize) / map.tsize * texture.width() as f32) as u32;
+    for y in offset..(offset + h) {
+        if x >= 0 && x < out_img.width() as i32 &&
+           y >= 0 && y < out_img.height() as i32
+        {
+            let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
+            let color: mq::Color = texture.get_pixel(srcx, srcy);
+            out_img.set_pixel(
+                x as u32, y as u32,
+                mq::Color::new(
+                    color.r * shading,
+                    color.g * shading,
+                    color.b * shading,
+                    color.a
                 )
-            ),
-            ..Default::default()
+            );
         }
-    );
+    }
 }
 
+#[allow(unused)]
 fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
@@ -89,34 +92,34 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-    for (ent, ins) in &vins {
-        let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
-        let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
-        let offset: f32 = mq::screen_height() / 2. + middle_h - h;
+//     for (ent, ins) in &vins {
+//         let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
+//         let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
+//         let offset: f32 = mq::screen_height() / 2. + middle_h - h;
 
-        let src: mq::Rect = mq::Rect::new(
-            ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
-            0.,
-            1.,
-            map.textures.get(&ent.texture).unwrap().height()
-        );
-        let dst: mq::Rect = mq::Rect::new(col as f32, offset, 1., h);
+//         let src: mq::Rect = mq::Rect::new(
+//             ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
+//             0.,
+//             1.,
+//             map.textures.get(&ent.texture).unwrap().height()
+//         );
+//         let dst: mq::Rect = mq::Rect::new(col as f32, offset, 1., h);
 
-        let shading: f32 = if let Some(fog) = fog {
-            calculate_fog(fog, ins.distance)
-        } else {
-            1.
-        };
-        mq::draw_texture_ex(
-            map.textures.get(&ent.texture).unwrap(),
-            dst.x, dst.y, mq::Color::new(shading, shading, shading, 1.),
-            mq::DrawTextureParams {
-                dest_size: Some(mq::Vec2::new(dst.w, dst.h)),
-                source: Some(src),
-                ..Default::default()
-            }
-        );
-    }
+//         let shading: f32 = if let Some(fog) = fog {
+//             calculate_fog(fog, ins.distance)
+//         } else {
+//             1.
+//         };
+//         mq::draw_texture_ex(
+//             map.textures.get(&ent.texture).unwrap(),
+//             dst.x, dst.y, mq::Color::new(shading, shading, shading, 1.),
+//             mq::DrawTextureParams {
+//                 dest_size: Some(mq::Vec2::new(dst.w, dst.h)),
+//                 source: Some(src),
+//                 ..Default::default()
+//             }
+//         );
+//     }
 }
 
 pub fn render_2d(map: &Map, ray: Ray) {

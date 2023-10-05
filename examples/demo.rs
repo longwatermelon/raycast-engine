@@ -8,9 +8,9 @@ use std::collections::HashMap;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut textures: HashMap<char, mq::Texture2D> = HashMap::new();
-    textures.insert('0', mq::Texture2D::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)));
-    textures.insert('e', mq::Texture2D::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)));
+    let mut textures: HashMap<char, mq::Image> = HashMap::new();
+    textures.insert('0', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
+    textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
@@ -33,6 +33,13 @@ async fn main() {
 
     let mut last_fps_update: f64 = mq::get_time();
     let mut fps: i32 = mq::get_fps();
+
+    let mut out_img: mq::Image = mq::Image::gen_image_color(
+        mq::screen_width() as u16,
+        mq::screen_height() as u16,
+        mq::BLACK
+    );
+    let out_tex: mq::Texture2D = mq::Texture2D::from_image(&out_img);
 
     loop {
         if mq::is_key_pressed(mq::KeyCode::Tab) {
@@ -79,7 +86,11 @@ async fn main() {
         }
 
         mq::clear_background(mq::BLACK);
-        raycast::render(&map, &entities, cam, None);
+        out_img.bytes.fill(0);
+        raycast::render(&map, &entities, cam, None, &mut out_img);
+        out_tex.update(&out_img);
+        mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
+
         raycast::render_item(&mut items);
 
         if mq::get_time() - last_fps_update > 0.5 {
