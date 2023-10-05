@@ -13,6 +13,8 @@ async fn main() {
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
+    map.floor_tex(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap());
+
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
     let mut items: Vec<Item> = vec![
@@ -87,7 +89,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, Some(300.), &mut out_img);
+        raycast::render(&map, &entities, cam, None, &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 

@@ -51,17 +51,10 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     // Horizontal walls only have endp.x change, vertical walls only have endp.y change
     // Horizontal walls collide by north and south
     let endp: Vec2 = ray.along(ins.distance);
-    let texture_index: f32 = if matches!(face, Direction::South | Direction::North) {
-        endp.x
-    } else {
-        endp.y
-    };
-
-    let shading: f32 = if let Some(fog) = fog {
-        calculate_fog(fog, ins.distance)
-    } else {
-        1.
-    };
+    let texture_index: f32 = if matches!(face,
+        Direction::South | Direction::North
+    ) { endp.x } else { endp.y };
+    let fog: f32 = calculate_fog(fog, ins.distance);
 
     let srcx: u32 = ((texture_index % map.tsize) / map.tsize * texture.width() as f32) as u32;
     for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
@@ -70,9 +63,9 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
         out_img.set_pixel(
             x as u32, y as u32,
             mq::Color::new(
-                color.r * shading,
-                color.g * shading,
-                color.b * shading,
+                color.r * fog,
+                color.g * fog,
+                color.b * fog,
                 color.a
             )
         );
@@ -96,12 +89,10 @@ fn render_floor_and_ceil(map: &Map, ray: Ray, x: i32, rend_wall_result: (i32, i3
         let tvert: f32 = (map.tsize / 2.) / dir.y;
         let new_pos: Vec2 = ray.along(tvert);
         let distance: f32 = ray.orig.distance(new_pos);
-        let fog: f32 = calculate_fog(fog.unwrap(), distance);
+        let fog: f32 = calculate_fog(fog, distance);
 
-        let texture = map.textures.get(&'0').unwrap();
-        let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
-
-        let color: mq::Color = texture.get_pixel(tc.x as u32, tc.y as u32);
+        let tc: Vec2 = new_pos % Vec2::new(map.floor_tex.width() as f32, map.floor_tex.height() as f32);
+        let color: mq::Color = map.floor_tex.get_pixel(tc.x as u32, tc.y as u32);
         out_img.set_pixel(x as u32, y as u32, mq::Color::new(
             fog * color.r,
             fog * color.g,
@@ -136,11 +127,7 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
         let srcx: u32 = (ins.entity_col() * map.textures.get(&ent.texture).unwrap().width() as f32) as u32;
         let texture: &mq::Image = map.textures.get(&ent.texture).unwrap();
 
-        let shading: f32 = if let Some(fog) = fog {
-            calculate_fog(fog, ins.distance)
-        } else {
-            1.
-        };
+        let fog: f32 = calculate_fog(fog, ins.distance);
 
         for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
             let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
@@ -150,9 +137,9 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
                 out_img.set_pixel(
                     col as u32, y as u32,
                     mq::Color::new(
-                        color.r * shading,
-                        color.g * shading,
-                        color.b * shading,
+                        color.r * fog,
+                        color.g * fog,
+                        color.b * fog,
                         color.a
                     )
                 );
@@ -198,8 +185,12 @@ pub fn render_2d(map: &Map, ray: Ray) {
     mq::draw_line(ox, oy, endx, endy, 3., mq::BLUE);
 }
 
-fn calculate_fog(fog: f32, distance: f32) -> f32 {
-    1. - f32::min(distance / fog, 1.)
+fn calculate_fog(fog: Option<f32>, distance: f32) -> f32 {
+    if let Some(fog) = fog {
+        1. - f32::min(distance / fog, 1.)
+    } else {
+        1.
+    }
 }
 
 pub fn render_item(items: &mut Vec<Item>) {

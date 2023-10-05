@@ -13,6 +13,7 @@ pub struct Map {
     pub(crate) h: f32,
     pub(crate) tsize: f32,
     pub(crate) textures: HashMap<char, mq::Image>,
+    pub(crate) floor_tex: mq::Image,
 }
 
 impl Map {
@@ -37,6 +38,7 @@ impl Map {
             h,
             tsize: 50.,
             textures,
+            floor_tex: mq::Image::empty(),
         }
     }
 
@@ -50,7 +52,12 @@ impl Map {
             h: h as f32,
             tsize: 50.,
             textures,
+            floor_tex: mq::Image::empty(),
         }
+    }
+
+    pub fn floor_tex(&mut self, texture: mq::Image) {
+        self.floor_tex = texture;
     }
 
     pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Image>) -> Self {
