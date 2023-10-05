@@ -29,7 +29,8 @@ pub struct Intersection {
 #[derive(Copy, Clone)]
 pub struct Ray {
     pub orig: Vec2,
-    pub angle: f32
+    pub angle: f32,
+    pub vangle: f32,
 }
 
 impl Intersection {
@@ -61,7 +62,7 @@ impl Intersection {
 
 impl Ray {
     pub fn new(orig: Vec2, angle: f32) -> Self {
-        Self { orig, angle }
+        Self { orig, angle, vangle: 0. }
     }
 
     pub fn along(&self, t: f32) -> Vec2 {
@@ -113,9 +114,11 @@ pub fn fps_camera_controls(map: &Map, cam: &mut Ray, speed: f32) {
     }
 }
 
-pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_x: &mut f32, sensitivity: f32) {
-    let mx: f32 = mq::mouse_position().0;
-    cam.angle += sensitivity * (mx - *prev_mouse_x) / 200.;
+pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_pos: &mut (f32, f32), sensitivity: f32) {
+    let mpos: (f32, f32) = mq::mouse_position();
+    cam.angle += sensitivity * (mpos.0 - prev_mouse_pos.0) / 200.;
+    cam.vangle += sensitivity * (mpos.1 - prev_mouse_pos.1) / 200.;
     cam.angle = restrict_angle(cam.angle);
-    *prev_mouse_x = mx;
+    // cam.vangle = restrict_angle(cam.vangle);
+    *prev_mouse_pos = mpos;
 }

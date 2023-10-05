@@ -25,7 +25,7 @@ async fn main() {
 
     let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
 
-    let mut prev_mx: f32 = mq::mouse_position().0;
+    let mut prev_mpos: (f32, f32) = mq::mouse_position();
 
     let mut grabbed: bool = true;
     mq::set_cursor_grab(true);
@@ -50,7 +50,7 @@ async fn main() {
 
         // Controls
         raycast::util::fps_camera_controls(&map, &mut cam, 2.);
-        raycast::util::fps_camera_rotation(&mut cam, &mut prev_mx, 1.);
+        raycast::util::fps_camera_rotation(&mut cam, &mut prev_mpos, 1.);
 
         // Entity move towards player
         for ent in &mut entities {

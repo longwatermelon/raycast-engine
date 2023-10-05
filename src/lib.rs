@@ -14,7 +14,8 @@ use std::f32::consts::PI;
 pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
     for (x, (ins, angle)) in vins.iter().enumerate() {
-        let cast_ray: Ray = Ray::new(ray.orig, *angle);
+        let mut cast_ray: Ray = Ray::new(ray.orig, *angle);
+        cast_ray.vangle = ray.vangle;
         render_wall(map, ins, cast_ray, x as i32, fog, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
@@ -38,8 +39,9 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 }
 
 fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) {
+    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(PI / 2. / 2.));
     let h: i32 = ((map.tsize * mq::screen_height()) / ins.fisheye_distance) as i32;
-    let offset: i32 = (mq::screen_height() as i32 - h) / 2;
+    let offset: i32 = floor_level as i32 - (h / 2);
 
     let texture: &mq::Image = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
     let IntersectionType::Wall { face, .. } = ins.itype else { unreachable!() };
@@ -87,10 +89,11 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
+    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(PI / 2. / 2.));
     for (ent, ins) in &vins {
         let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
         let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
-        let offset: f32 = mq::screen_height() / 2. + middle_h - h;
+        let offset: f32 = floor_level + middle_h - h;
 
         let h: i32 = h as i32;
         let offset: i32 = offset as i32;
