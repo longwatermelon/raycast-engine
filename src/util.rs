@@ -117,7 +117,7 @@ pub fn fps_camera_controls(map: &Map, cam: &mut Ray, speed: f32) {
 pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_pos: &mut (f32, f32), sensitivity: f32) {
     let mpos: (f32, f32) = mq::mouse_position();
     cam.angle += sensitivity * (mpos.0 - prev_mouse_pos.0) / 200.;
-    // cam.vangle += sensitivity * (mpos.1 - prev_mouse_pos.1) / 200.;
+    cam.vangle += sensitivity * (mpos.1 - prev_mouse_pos.1) / 200.;
     cam.angle = restrict_angle(cam.angle);
     cam.vangle = cam.vangle.max(-1.).min(1.);
     // cam.vangle = restrict_angle(cam.vangle);

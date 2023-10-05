@@ -42,7 +42,7 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 
 /// Returns (wall bottom, wall top)
 fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) -> (i32, i32) {
-    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(PI / 2. / 2.));
+    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
     let h: i32 = ((map.tsize * mq::screen_height()) / ins.fisheye_distance) as i32;
     let offset: i32 = floor_level as i32 - (h / 2);
 
@@ -83,12 +83,14 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
 
 fn render_floor_and_ceil(map: &Map, ray: Ray, x: i32, rend_wall_result: (i32, i32), fog: Option<f32>, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
+    // let fov: f32 = PI / 2.;
+    let fov: f32 = 1.;
     for y in rend_wall_result.0.max(0).min(mq::screen_height() as i32)..(mq::screen_height() as i32) {
         // Find ray angles corresponding to screen pixel
-        let ha: f32 = (x as f32 / mq::screen_width()) - 0.5;
-        let va: f32 = (y as f32 / mq::screen_height()) - 0.5;
+        let ha: f32 = (x as f32 / mq::screen_width()) * fov - (fov / 2.);
+        let va: f32 = (y as f32 / mq::screen_height()) * fov - (fov / 2.);
         // x = ray.angle, y = angle looking down, z is useless
-        let dir: Vec3 = Vec3::new(ha, va, 1.).normalize();
+        let dir: Vec3 = Vec3::new(ha, f32::sin(va + ray.vangle), 1.).normalize();
 
         // How many `dir.y` it takes to get to the floor
         let tvert: f32 = (map.tsize / 2.) / dir.y;
@@ -122,7 +124,7 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(PI / 2. / 2.));
+    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
     for (ent, ins) in &vins {
         let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
         let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
