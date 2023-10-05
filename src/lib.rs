@@ -16,7 +16,7 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_im
     for (x, (ins, angle)) in vins.iter().enumerate() {
         let cast_ray: Ray = Ray::new(ray.orig, *angle);
         render_wall(map, ins, cast_ray, x as i32, fog, out_img);
-        render_entities(map, cast_ray, x as i32, entities, ins.distance, fog);
+        render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
 }
 
@@ -59,27 +59,22 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     };
 
     let srcx: u32 = ((texture_index % map.tsize) / map.tsize * texture.width() as f32) as u32;
-    for y in offset..(offset + h) {
-        if x >= 0 && x < out_img.width() as i32 &&
-           y >= 0 && y < out_img.height() as i32
-        {
-            let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-            let color: mq::Color = texture.get_pixel(srcx, srcy);
-            out_img.set_pixel(
-                x as u32, y as u32,
-                mq::Color::new(
-                    color.r * shading,
-                    color.g * shading,
-                    color.b * shading,
-                    color.a
-                )
-            );
-        }
+    for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
+        let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
+        let color: mq::Color = texture.get_pixel(srcx, srcy);
+        out_img.set_pixel(
+            x as u32, y as u32,
+            mq::Color::new(
+                color.r * shading,
+                color.g * shading,
+                color.b * shading,
+                color.a
+            )
+        );
     }
 }
 
-#[allow(unused)]
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>, out_img: &mut mq::Image) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
@@ -92,34 +87,40 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-//     for (ent, ins) in &vins {
-//         let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
-//         let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
-//         let offset: f32 = mq::screen_height() / 2. + middle_h - h;
+    for (ent, ins) in &vins {
+        let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
+        let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
+        let offset: f32 = mq::screen_height() / 2. + middle_h - h;
 
-//         let src: mq::Rect = mq::Rect::new(
-//             ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
-//             0.,
-//             1.,
-//             map.textures.get(&ent.texture).unwrap().height()
-//         );
-//         let dst: mq::Rect = mq::Rect::new(col as f32, offset, 1., h);
+        let h: i32 = h as i32;
+        let offset: i32 = offset as i32;
 
-//         let shading: f32 = if let Some(fog) = fog {
-//             calculate_fog(fog, ins.distance)
-//         } else {
-//             1.
-//         };
-//         mq::draw_texture_ex(
-//             map.textures.get(&ent.texture).unwrap(),
-//             dst.x, dst.y, mq::Color::new(shading, shading, shading, 1.),
-//             mq::DrawTextureParams {
-//                 dest_size: Some(mq::Vec2::new(dst.w, dst.h)),
-//                 source: Some(src),
-//                 ..Default::default()
-//             }
-//         );
-//     }
+        let srcx: u32 = (ins.entity_col() * map.textures.get(&ent.texture).unwrap().width() as f32) as u32;
+        let texture: &mq::Image = map.textures.get(&ent.texture).unwrap();
+
+        let shading: f32 = if let Some(fog) = fog {
+            calculate_fog(fog, ins.distance)
+        } else {
+            1.
+        };
+
+        for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
+            let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
+            let color: mq::Color = texture.get_pixel(srcx, srcy);
+
+            if color.a > 0. {
+                out_img.set_pixel(
+                    col as u32, y as u32,
+                    mq::Color::new(
+                        color.r * shading,
+                        color.g * shading,
+                        color.b * shading,
+                        color.a
+                    )
+                );
+            }
+        }
+    }
 }
 
 pub fn render_2d(map: &Map, ray: Ray) {

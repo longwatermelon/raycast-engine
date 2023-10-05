@@ -87,7 +87,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, None, &mut out_img);
+        raycast::render(&map, &entities, cam, Some(300.), &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 
