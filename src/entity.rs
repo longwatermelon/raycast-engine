@@ -1,5 +1,5 @@
 use crate::util::{self, Ray, Intersection, IntersectionType};
-use macroquad::math::Vec2;
+use glam::Vec2;
 use std::f32::consts::PI;
 
 #[derive(Clone)]

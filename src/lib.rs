@@ -7,7 +7,8 @@ use util::{Ray, Intersection, IntersectionType, Direction};
 use entity::Entity;
 use map::Map;
 use item::Item;
-use macroquad::prelude::*;
+use macroquad::prelude as mq;
+use glam::Vec2;
 use std::f32::consts::PI;
 
 pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>) {
@@ -26,8 +27,8 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     let mut res: Vec<(Intersection, f32)> = Vec::new();
-    for i in 0..screen_width() as i32 {
-        let angle: f32 = start_angle + (i as f32 / screen_width() * angle_range);
+    for i in 0..mq::screen_width() as i32 {
+        let angle: f32 = start_angle + (i as f32 / mq::screen_width() * angle_range);
         let mut ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
         ins.distance *= f32::cos(util::restrict_angle(angle - ray.angle));
         res.push((ins, angle));
@@ -37,10 +38,10 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 }
 
 fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>) {
-    let h: f32 = (map.tsize * screen_height()) / ins.distance;
-    let offset: f32 = (screen_height() - h) / 2.;
+    let h: f32 = (map.tsize * mq::screen_height()) / ins.distance;
+    let offset: f32 = (mq::screen_height() - h) / 2.;
 
-    let texture: &Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
+    let texture: &mq::Texture2D = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
     let IntersectionType::Wall { face, .. } = ins.itype else { unreachable!() };
     // Horizontal walls only have endp.x change, vertical walls only have endp.y change
     // Horizontal walls collide by north and south
@@ -57,13 +58,13 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
         1.
     };
 
-    draw_texture_ex(
+    mq::draw_texture_ex(
         texture,
-        x as f32, offset, Color::new(shading, shading, shading, 1.),
-        DrawTextureParams {
-            dest_size: Some(Vec2::new(1., h)),
+        x as f32, offset, mq::Color::new(shading, shading, shading, 1.),
+        mq::DrawTextureParams {
+            dest_size: Some(mq::Vec2::new(1., h)),
             source: Some(
-                Rect::new(
+                mq::Rect::new(
                     (texture_index % map.tsize) / map.tsize * texture.width(),
                     0.,
                     1.,
@@ -89,28 +90,28 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
     for (ent, ins) in &vins {
-        let h: f32 = (ent.h * screen_height()) / ins.distance;
-        let middle_h: f32 = (map.tsize / 2. * screen_height()) / ins.distance;
-        let offset: f32 = screen_height() / 2. + middle_h - h;
+        let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
+        let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
+        let offset: f32 = mq::screen_height() / 2. + middle_h - h;
 
-        let src: Rect = Rect::new(
+        let src: mq::Rect = mq::Rect::new(
             ins.entity_col() * map.textures.get(&ent.texture).unwrap().width(),
             0.,
             1.,
             map.textures.get(&ent.texture).unwrap().height()
         );
-        let dst: Rect = Rect::new(col as f32, offset, 1., h);
+        let dst: mq::Rect = mq::Rect::new(col as f32, offset, 1., h);
 
         let shading: f32 = if let Some(fog) = fog {
             calculate_fog(fog, ins.distance)
         } else {
             1.
         };
-        draw_texture_ex(
+        mq::draw_texture_ex(
             map.textures.get(&ent.texture).unwrap(),
-            dst.x, dst.y, Color::new(shading, shading, shading, 1.),
-            DrawTextureParams {
-                dest_size: Some(Vec2::new(dst.w, dst.h)),
+            dst.x, dst.y, mq::Color::new(shading, shading, shading, 1.),
+            mq::DrawTextureParams {
+                dest_size: Some(mq::Vec2::new(dst.w, dst.h)),
                 source: Some(src),
                 ..Default::default()
             }
@@ -119,40 +120,40 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
 }
 
 pub fn render_2d(map: &Map, ray: Ray) {
-    let w: f32 = screen_width() / map.w;
-    let h: f32 = screen_height() / map.h;
+    let w: f32 = mq::screen_width() / map.w;
+    let h: f32 = mq::screen_height() / map.h;
     for y in 0..map.h as i32 {
         for x in 0..map.w as i32 {
             if map.at(x, y) != '.' {
-                draw_rectangle(
+                mq::draw_rectangle(
                     x as f32 * w,
                     y as f32 * h,
                     w, h,
-                    GRAY
+                    mq::GRAY
                 );
-                draw_rectangle_lines(
+                mq::draw_rectangle_lines(
                     x as f32 * w,
                     y as f32 * h,
                     w, h, 1.,
-                    BLACK
+                    mq::BLACK
                 );
             }
         }
     }
 
-    let ox: f32 = ray.orig.x * (screen_width() / (map.w * map.tsize));
-    let oy: f32 = ray.orig.y * (screen_height() / (map.h * map.tsize));
-    draw_rectangle(
+    let ox: f32 = ray.orig.x * (mq::screen_width() / (map.w * map.tsize));
+    let oy: f32 = ray.orig.y * (mq::screen_height() / (map.h * map.tsize));
+    mq::draw_rectangle(
         ox - 5., oy - 5.,
         10., 10.,
-        GREEN
+        mq::GREEN
     );
 
     let angle: f32 = ray.angle;
     let ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
-    let endx: f32 = ox + (ins.distance * f32::cos(angle) * (screen_width() / (map.w * map.tsize)));
-    let endy: f32 = oy + (ins.distance * f32::sin(angle) * (screen_height() / (map.h * map.tsize)));
-    draw_line(ox, oy, endx, endy, 3., BLUE);
+    let endx: f32 = ox + (ins.distance * f32::cos(angle) * (mq::screen_width() / (map.w * map.tsize)));
+    let endy: f32 = oy + (ins.distance * f32::sin(angle) * (mq::screen_height() / (map.h * map.tsize)));
+    mq::draw_line(ox, oy, endx, endy, 3., mq::BLUE);
 }
 
 fn calculate_fog(fog: f32, distance: f32) -> f32 {

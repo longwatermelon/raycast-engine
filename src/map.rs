@@ -1,6 +1,7 @@
 use crate::util::{Ray, Intersection, IntersectionType, Direction};
 use crate::entity::Entity;
-use macroquad::prelude::*;
+use macroquad::prelude as mq;
+use glam::{Vec2, IVec2};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
@@ -11,12 +12,11 @@ pub struct Map {
     pub(crate) w: f32,
     pub(crate) h: f32,
     pub(crate) tsize: f32,
-    pub(crate) textures: HashMap<char, Texture2D>,
-    pub(crate) floor_tex: Texture2D,
+    pub(crate) textures: HashMap<char, mq::Texture2D>,
 }
 
 impl Map {
-    pub fn new(path: &str, textures: HashMap<char, Texture2D>) -> Self {
+    pub fn new(path: &str, textures: HashMap<char, mq::Texture2D>) -> Self {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
 
@@ -37,11 +37,10 @@ impl Map {
             h,
             tsize: 50.,
             textures,
-            floor_tex: Texture2D::empty(),
         }
     }
 
-    pub fn from(layout: &str, textures: HashMap<char, Texture2D>) -> Self {
+    pub fn from(layout: &str, textures: HashMap<char, mq::Texture2D>) -> Self {
         let w: usize = layout.find('\n').unwrap();
         let filtered_layout: String = layout.replace('\n', "");
         let h: usize = filtered_layout.len() / w;
@@ -51,15 +50,10 @@ impl Map {
             h: h as f32,
             tsize: 50.,
             textures,
-            floor_tex: Texture2D::empty(),
         }
     }
 
-    pub fn set_floor_tex(&mut self, floor_tex: Texture2D) {
-        self.floor_tex = floor_tex;
-    }
-
-    pub fn from_bytes(bytes: &[u8], textures: HashMap<char, Texture2D>) -> Self {
+    pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Texture2D>) -> Self {
         Map::from(std::str::from_utf8(bytes).unwrap(), textures)
     }
 

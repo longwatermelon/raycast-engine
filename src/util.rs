@@ -1,6 +1,7 @@
 use crate::util;
 use crate::map::Map;
-use macroquad::prelude::*;
+use macroquad::prelude as mq;
+use glam::{Vec2, IVec2};
 use std::f32::consts::PI;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -92,25 +93,25 @@ pub fn move_towards(pos: Vec2, target: Vec2, speed: f32) -> Vec2 {
 }
 
 pub fn fps_camera_controls(map: &Map, cam: &mut Ray, speed: f32) {
-    if is_key_down(KeyCode::W) {
+    if mq::is_key_down(mq::KeyCode::W) {
         cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(speed));
     }
 
-    if is_key_down(KeyCode::S) {
+    if mq::is_key_down(mq::KeyCode::S) {
         cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, cam.angle).along(-speed));
     }
 
-    if is_key_down(KeyCode::A) {
+    if mq::is_key_down(mq::KeyCode::A) {
         cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, restrict_angle(cam.angle - PI / 2.)).along(speed / 2.));
     }
 
-    if is_key_down(KeyCode::D) {
+    if mq::is_key_down(mq::KeyCode::D) {
         cam.orig = map.move_collidable(cam.orig, Ray::new(cam.orig, restrict_angle(cam.angle - PI / 2.)).along(-speed / 2.));
     }
 }
 
 pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_x: &mut f32, sensitivity: f32) {
-    let mx: f32 = mouse_position().0;
+    let mx: f32 = mq::mouse_position().0;
     cam.angle += sensitivity * (mx - *prev_mouse_x) / 200.;
     cam.angle = restrict_angle(cam.angle);
     *prev_mouse_x = mx;

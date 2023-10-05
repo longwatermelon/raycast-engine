@@ -1,15 +1,16 @@
-use macroquad::prelude::*;
+use macroquad::prelude as mq;
+use glam::Vec2;
 
 pub enum Animation {
     None,
     EaseIn { target: Vec2 },
     Jab { diff: Vec2, t: f32 },
-    TextureSwap { orig: Texture2D, t: f32 }
+    TextureSwap { orig: mq::Texture2D, t: f32 }
 }
 
 pub struct Item {
     pub name: String,
-    texture: Texture2D,
+    texture: mq::Texture2D,
     pos: Vec2,
     animation: Animation,
     animation_start: f64,
@@ -17,8 +18,8 @@ pub struct Item {
 
 impl Item {
     pub fn new(name: &str, bytes: &[u8]) -> Self {
-        let texture: Texture2D = Texture2D::from_file_with_format(bytes, Some(ImageFormat::Png));
-        let pos: Vec2 = Vec2::new(screen_width() - texture.width(), screen_height());
+        let texture: mq::Texture2D = mq::Texture2D::from_file_with_format(bytes, Some(mq::ImageFormat::Png));
+        let pos: Vec2 = Vec2::new(mq::screen_width() - texture.width(), mq::screen_height());
         Self {
             name: String::from(name),
             texture,
@@ -30,20 +31,20 @@ impl Item {
 
     pub fn unequip(&mut self) {
         self.end_animation();
-        self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height()) };
-        self.animation_start = get_time();
+        self.animation = Animation::EaseIn { target: Vec2::new(mq::screen_width() - self.texture.width(), mq::screen_height()) };
+        self.animation_start = mq::get_time();
     }
 
     pub fn equip(&mut self) {
         self.end_animation();
-        self.animation = Animation::EaseIn { target: Vec2::new(screen_width() - self.texture.width(), screen_height() - self.texture.height()) };
-        self.animation_start = get_time();
+        self.animation = Animation::EaseIn { target: Vec2::new(mq::screen_width() - self.texture.width(), mq::screen_height() - self.texture.height()) };
+        self.animation_start = mq::get_time();
     }
 
     pub fn jab(&mut self, diff: Vec2, t: f32) {
         self.end_animation();
         self.animation = Animation::Jab { diff, t };
-        self.animation_start = get_time();
+        self.animation_start = mq::get_time();
     }
 
     fn end_jab(&mut self) {
@@ -51,11 +52,11 @@ impl Item {
         self.equip();
     }
 
-    pub fn texswap(&mut self, texture: &Texture2D, t: f32) {
+    pub fn texswap(&mut self, texture: &mq::Texture2D, t: f32) {
         self.end_animation();
         self.animation = Animation::TextureSwap { orig: self.texture.clone(), t };
         self.texture = texture.clone();
-        self.animation_start = get_time();
+        self.animation_start = mq::get_time();
     }
 
     fn end_texswap(&mut self) {
@@ -78,7 +79,7 @@ impl Item {
             Animation::None => (),
             Animation::EaseIn { target } => self.pos += (target - self.pos) / 5.,
             Animation::Jab { diff, t } => {
-                let elapsed: f64 = get_time() - self.animation_start;
+                let elapsed: f64 = mq::get_time() - self.animation_start;
                 if elapsed < t as f64 {
                     self.pos += diff;
                 } else {
@@ -86,7 +87,7 @@ impl Item {
                 }
             },
             Animation::TextureSwap { t, .. } => {
-                let elapsed: f64 = get_time() - self.animation_start;
+                let elapsed: f64 = mq::get_time() - self.animation_start;
                 if elapsed > t as f64 {
                     self.end_texswap();
                 }
@@ -95,6 +96,6 @@ impl Item {
     }
 
     pub fn render(&self) {
-        draw_texture(&self.texture, self.pos.x, self.pos.y, WHITE);
+        mq::draw_texture(&self.texture, self.pos.x, self.pos.y, mq::WHITE);
     }
 }
