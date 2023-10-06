@@ -3,8 +3,10 @@ use raycast::util::{Ray, Intersection, IntersectionType};
 use raycast::entity::Entity;
 use raycast::item::Item;
 use macroquad::prelude as mq;
-use glam::Vec2;
+use glam::{Vec2, IVec2};
 use std::collections::HashMap;
+
+const SCRDIM: IVec2 = IVec2::new(800, 800);
 
 #[macroquad::main(window_conf)]
 async fn main() {
@@ -13,7 +15,8 @@ async fn main() {
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
-    map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    // map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    map.floor_tex(Surface::Color(mq::BEIGE));
     map.ceil_tex(Surface::Color(mq::WHITE));
 
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
@@ -38,8 +41,8 @@ async fn main() {
     let mut fps: i32 = mq::get_fps();
 
     let mut out_img: mq::Image = mq::Image::gen_image_color(
-        mq::screen_width() as u16,
-        mq::screen_height() as u16,
+        SCRDIM.x as u16,
+        SCRDIM.y as u16,
         mq::BLACK
     );
     let out_tex: mq::Texture2D = mq::Texture2D::from_image(&out_img);
@@ -90,7 +93,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, Some(300.), &mut out_img);
+        raycast::render(&map, &entities, cam, None, SCRDIM, &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 
@@ -109,8 +112,8 @@ async fn main() {
 fn window_conf() -> mq::Conf {
     mq::Conf {
         window_title: String::from("Raycast demo"),
-        window_width: 800,
-        window_height: 800,
+        window_width: SCRDIM.x,
+        window_height: SCRDIM.y,
         window_resizable: false,
         ..Default::default()
     }

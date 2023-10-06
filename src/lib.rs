@@ -11,8 +11,8 @@ use macroquad::prelude as mq;
 use glam::{Vec2, Vec3, IVec2};
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
-    let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
+pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, scrdim: IVec2, out_img: &mut mq::Image) {
+    // let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray, scrdim);
 
     for (x, (ins, angle)) in vins.iter().enumerate() {
@@ -54,24 +54,23 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     // Horizontal walls only have endp.x change, vertical walls only have endp.y change
     // Horizontal walls collide by north and south
     let endp: Vec2 = ray.along(ins.distance);
-    let texture_index: f32 = if matches!(face,
-        Direction::South | Direction::North
-    ) { endp.x } else { endp.y };
-    let fog: f32 = calculate_fog(fog, ins.distance);
+    let (texture_index, shading) = if matches!(face, Direction::South | Direction::North) {
+        (endp.x, 0.8)
+    } else {
+        (endp.y, 1.)
+    };
+    let fog: f32 = if fog.is_some() {
+        calculate_fog(fog, ins.distance)
+    } else {
+        shading
+    };
 
     let srcx: u32 = ((texture_index % map.tsize) / map.tsize * texture.width() as f32) as u32;
     for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
         let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-        let color: mq::Color = texture.get_pixel(srcx, srcy);
-        out_img.set_pixel(
-            x as u32, y as u32,
-            mq::Color::new(
-                color.r * fog,
-                color.g * fog,
-                color.b * fog,
-                color.a
-            )
-        );
+        let mut color: mq::Color = texture.get_pixel(srcx, srcy);
+        color.a = fog;
+        out_img.set_pixel(x as u32, y as u32, color);
     }
 
     (offset + h, offset)
@@ -93,20 +92,16 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let fog: f32 = calculate_fog(fog, distance);
 
         // Rendering
-        let color: mq::Color = match surface {
+        let mut color: mq::Color = match surface {
             Surface::Texture(texture) => {
                 let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
                 texture.get_pixel(tc.x as u32, tc.y as u32)
             }
             Surface::Color(color) => *color
         };
+        color.a = fog;
 
-        out_img.set_pixel(x as u32, y as u32, mq::Color::new(
-            fog * color.r,
-            fog * color.g,
-            fog * color.b,
-            color.a,
-        ));
+        out_img.set_pixel(x as u32, y as u32, color);
     }
 }
 
@@ -139,18 +134,11 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
 
         for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
             let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-            let color: mq::Color = texture.get_pixel(srcx, srcy);
+            let mut color: mq::Color = texture.get_pixel(srcx, srcy);
 
             if color.a > 0. {
-                out_img.set_pixel(
-                    col as u32, y as u32,
-                    mq::Color::new(
-                        color.r * fog,
-                        color.g * fog,
-                        color.b * fog,
-                        color.a
-                    )
-                );
+                color.a = fog;
+                out_img.set_pixel(col as u32, y as u32, color);
             }
         }
     }
