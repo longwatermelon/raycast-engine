@@ -158,14 +158,24 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
 
         let fog: f32 = calculate_fog(fog, ins.distance);
 
-        for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
-            let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-            let mut color: mq::Color = texture.get_pixel(srcx, srcy);
+        let y0: i32 = offset.max(0);
+        let y1: i32 = (offset + h).min(out_img.height() as i32);
 
-            if color.a > 0. {
-                color.a = fog;
-                out_img.set_pixel(col as u32, y as u32, color);
+        let mut out_i: usize = y0 as usize * out_img.width() + col as usize;
+        let out_di: usize = out_img.width();
+        let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
+        let tex_data: &[[u8; 4]] = texture.get_image_data();
+
+        for y in y0..y1 {
+            let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
+            let mut color: [u8; 4] = tex_data[srcy as usize * texture.width() + srcx as usize];
+
+            if color[3] > 0 {
+                color[3] = (fog * 255.) as u8;
+                out_data[out_i] = color;
             }
+
+            out_i += out_di;
         }
     }
 }
