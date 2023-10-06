@@ -5,7 +5,7 @@ pub mod item;
 
 use util::{Ray, Intersection, IntersectionType, Direction};
 use entity::Entity;
-use map::Map;
+use map::{Map, Surface};
 use item::Item;
 use macroquad::prelude as mq;
 use glam::{Vec2, Vec3, IVec2};
@@ -77,7 +77,7 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, texture: &mq::Image, scrdim: IVec2, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, surface: &Surface, scrdim: IVec2, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
     for y in y0.max(0).min(scrdim.y)..y1.max(0).min(scrdim.y) {
         // Find ray angles corresponding to screen pixel
@@ -92,9 +92,15 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let distance: f32 = ray.orig.distance(new_pos);
         let fog: f32 = calculate_fog(fog, distance);
 
-        // Floor
-        let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
-        let color: mq::Color = texture.get_pixel(tc.x as u32, tc.y as u32);
+        // Rendering
+        let color: mq::Color = match surface {
+            Surface::Texture(texture) => {
+                let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
+                texture.get_pixel(tc.x as u32, tc.y as u32)
+            }
+            Surface::Color(color) => *color
+        };
+
         out_img.set_pixel(x as u32, y as u32, mq::Color::new(
             fog * color.r,
             fog * color.g,

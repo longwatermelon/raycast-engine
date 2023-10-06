@@ -1,4 +1,4 @@
-use raycast::map::Map;
+use raycast::map::{Map, Surface};
 use raycast::util::{Ray, Intersection, IntersectionType};
 use raycast::entity::Entity;
 use raycast::item::Item;
@@ -13,8 +13,8 @@ async fn main() {
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
-    map.floor_tex(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap());
-    map.ceil_tex(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap());
+    map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    map.ceil_tex(Surface::Color(mq::WHITE));
 
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 

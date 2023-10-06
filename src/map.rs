@@ -7,14 +7,20 @@ use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
 
 #[derive(Debug)]
+pub enum Surface {
+    Texture(mq::Image),
+    Color(mq::Color),
+}
+
+#[derive(Debug)]
 pub struct Map {
     layout: String,
     pub(crate) w: f32,
     pub(crate) h: f32,
     pub(crate) tsize: f32,
     pub(crate) textures: HashMap<char, mq::Image>,
-    pub(crate) floor_tex: mq::Image,
-    pub(crate) ceil_tex: mq::Image,
+    pub(crate) floor_tex: Surface,
+    pub(crate) ceil_tex: Surface,
 }
 
 impl Map {
@@ -39,8 +45,8 @@ impl Map {
             h,
             tsize: 50.,
             textures,
-            floor_tex: mq::Image::empty(),
-            ceil_tex: mq::Image::empty(),
+            floor_tex: Surface::Color(mq::BLACK),
+            ceil_tex: Surface::Color(mq::BLACK),
         }
     }
 
@@ -54,17 +60,17 @@ impl Map {
             h: h as f32,
             tsize: 50.,
             textures,
-            floor_tex: mq::Image::empty(),
-            ceil_tex: mq::Image::empty(),
+            floor_tex: Surface::Color(mq::BLACK),
+            ceil_tex: Surface::Color(mq::BLACK),
         }
     }
 
-    pub fn floor_tex(&mut self, texture: mq::Image) {
-        self.floor_tex = texture;
+    pub fn floor_tex(&mut self, surface: Surface) {
+        self.floor_tex = surface;
     }
 
-    pub fn ceil_tex(&mut self, texture: mq::Image) {
-        self.ceil_tex = texture;
+    pub fn ceil_tex(&mut self, surface: Surface) {
+        self.ceil_tex = surface;
     }
 
     pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Image>) -> Self {
