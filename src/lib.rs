@@ -96,13 +96,13 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
     let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
     let surf_data: &[[u8; 4]] = match surface {
         Surface::Texture(img) => img.get_image_data(),
-        Surface::Color(_) => &[[0, 0, 0, 0]], // Placeholder - won't be used anyways
+        Surface::Color(_) => &[], // Doesn't matter what goes here, won't be used anyways
     };
 
     for y in y0..y1 {
         // Find ray angles corresponding to screen pixel
         let ha: f32 = (x as f32 / util::scrw() as f32) - 0.5;
-        let va: f32 = (y as f32 / util::scrw() as f32) - 0.5;
+        let va: f32 = (y as f32 / util::scrh() as f32) - 0.5;
         // x = ray.angle, y = angle looking down, z is useless
         let dir: Vec3 = Vec3::new(ha, f32::sin(va + ray.vangle), 1.).normalize();
 
@@ -116,7 +116,9 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let color: [u8; 4] = match surface {
             Surface::Texture(texture) => {
                 let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
-                surf_data[tc.y as usize * texture.width() + tc.x as usize]
+                let mut color: [u8; 4] = surf_data[tc.y as usize * texture.width() + tc.x as usize];
+                color[3] = (fog * 255.) as u8;
+                color
             }
             Surface::Color(color) => [
                 (color.r * 255.) as u8,

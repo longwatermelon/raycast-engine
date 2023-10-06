@@ -16,10 +16,11 @@ async fn main() {
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
     // map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    // map.ceil_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
     map.floor_tex(Surface::Color(mq::BEIGE));
     map.ceil_tex(Surface::Color(mq::GRAY));
 
-    let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
+    let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 30.)]);
 
     let mut items: Vec<Item> = vec![
         Item::new("gun", include_bytes!("res/gun.png")),
@@ -93,7 +94,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, None, &mut out_img);
+        raycast::render(&map, &entities, cam, Some(300.), &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 

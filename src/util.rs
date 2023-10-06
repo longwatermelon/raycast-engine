@@ -122,7 +122,6 @@ pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_pos: &mut (f32, f32), sensi
     cam.vangle += sensitivity * (mpos.1 - prev_mouse_pos.1) / 200.;
     cam.angle = restrict_angle(cam.angle);
     cam.vangle = cam.vangle.max(-1.).min(1.);
-    // cam.vangle = restrict_angle(cam.vangle);
     *prev_mouse_pos = mpos;
 }
 
