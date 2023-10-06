@@ -1,15 +1,15 @@
 use raycast::map::{Map, Surface};
-use raycast::util::{Ray, Intersection, IntersectionType};
+use raycast::util::{self, Ray, Intersection, IntersectionType};
 use raycast::entity::Entity;
 use raycast::item::Item;
 use macroquad::prelude as mq;
-use glam::{Vec2, IVec2};
+use glam::Vec2;
 use std::collections::HashMap;
-
-const SCRDIM: IVec2 = IVec2::new(800, 800);
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    raycast::util::set_scrw_scrh(800, 800);
+
     let mut textures: HashMap<char, mq::Image> = HashMap::new();
     textures.insert('0', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
@@ -41,8 +41,8 @@ async fn main() {
     let mut fps: i32 = mq::get_fps();
 
     let mut out_img: mq::Image = mq::Image::gen_image_color(
-        SCRDIM.x as u16,
-        SCRDIM.y as u16,
+        util::scrw() as u16,
+        util::scrh() as u16,
         mq::BLACK
     );
     let out_tex: mq::Texture2D = mq::Texture2D::from_image(&out_img);
@@ -93,7 +93,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, None, SCRDIM, &mut out_img);
+        raycast::render(&map, &entities, cam, None, &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 
@@ -112,8 +112,8 @@ async fn main() {
 fn window_conf() -> mq::Conf {
     mq::Conf {
         window_title: String::from("Raycast demo"),
-        window_width: SCRDIM.x,
-        window_height: SCRDIM.y,
+        window_width: 800,
+        window_height: 800,
         window_resizable: false,
         ..Default::default()
     }

@@ -4,6 +4,8 @@ use macroquad::prelude as mq;
 use glam::{Vec2, IVec2};
 use std::f32::consts::PI;
 
+static mut SCRDIM: IVec2 = IVec2::new(0, 0);
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Direction {
     North,
@@ -122,4 +124,19 @@ pub fn fps_camera_rotation(cam: &mut Ray, prev_mouse_pos: &mut (f32, f32), sensi
     cam.vangle = cam.vangle.max(-1.).min(1.);
     // cam.vangle = restrict_angle(cam.vangle);
     *prev_mouse_pos = mpos;
+}
+
+pub fn scrw() -> i32 {
+    unsafe { SCRDIM.x }
+}
+
+pub fn scrh() -> i32 {
+    unsafe { SCRDIM.y }
+}
+
+pub fn set_scrw_scrh(w: i32, h: i32) {
+    unsafe {
+        SCRDIM.x = w;
+        SCRDIM.y = h;
+    }
 }

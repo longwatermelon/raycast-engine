@@ -1,3 +1,4 @@
+use crate::util;
 use macroquad::prelude as mq;
 use glam::Vec2;
 
@@ -19,7 +20,7 @@ pub struct Item {
 impl Item {
     pub fn new(name: &str, bytes: &[u8]) -> Self {
         let texture: mq::Texture2D = mq::Texture2D::from_file_with_format(bytes, Some(mq::ImageFormat::Png));
-        let pos: Vec2 = Vec2::new(mq::screen_width() - texture.width(), mq::screen_height());
+        let pos: Vec2 = Vec2::new(util::scrw() as f32 - texture.width(), util::scrh() as f32);
         Self {
             name: String::from(name),
             texture,
@@ -31,13 +32,13 @@ impl Item {
 
     pub fn unequip(&mut self) {
         self.end_animation();
-        self.animation = Animation::EaseIn { target: Vec2::new(mq::screen_width() - self.texture.width(), mq::screen_height()) };
+        self.animation = Animation::EaseIn { target: Vec2::new(util::scrw() as f32 - self.texture.width(), util::scrh() as f32) };
         self.animation_start = mq::get_time();
     }
 
     pub fn equip(&mut self) {
         self.end_animation();
-        self.animation = Animation::EaseIn { target: Vec2::new(mq::screen_width() - self.texture.width(), mq::screen_height() - self.texture.height()) };
+        self.animation = Animation::EaseIn { target: Vec2::new(util::scrw() as f32 - self.texture.width(), util::scrh() as f32 - self.texture.height()) };
         self.animation_start = mq::get_time();
     }
 
@@ -96,6 +97,17 @@ impl Item {
     }
 
     pub fn render(&self) {
-        mq::draw_texture(&self.texture, self.pos.x, self.pos.y, mq::WHITE);
+        let ysection_below_screen: f32 = (self.pos.y + self.texture.height()) - util::scrh() as f32;
+        let new_h: f32 = if ysection_below_screen <= 0. {
+            self.texture.height()
+        } else {
+            self.texture.height() - ysection_below_screen
+        };
+
+        mq::draw_texture_ex(&self.texture, self.pos.x, self.pos.y, mq::WHITE, mq::DrawTextureParams {
+            dest_size: Some(mq::Vec2::new(self.texture.width(), new_h)),
+            source: Some(mq::Rect::new(0., 0., self.texture.width(), new_h)),
+            ..Default::default()
+        });
     }
 }
