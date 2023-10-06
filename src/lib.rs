@@ -18,8 +18,8 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_im
         cast_ray.vangle = ray.vangle;
 
         let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, mq::screen_height() as i32, -1, fog, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, mq::screen_height() as i32, -1, fog, &map.floor_tex, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
 }
@@ -75,7 +75,7 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, texture: &mq::Image, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
     for y in y0.max(0).min(mq::screen_height() as i32)..y1.max(0).min(mq::screen_height() as i32) {
         // Find ray angles corresponding to screen pixel
@@ -91,8 +91,8 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let fog: f32 = calculate_fog(fog, distance);
 
         // Floor
-        let tc: Vec2 = new_pos % Vec2::new(map.floor_tex.width() as f32, map.floor_tex.height() as f32);
-        let color: mq::Color = map.floor_tex.get_pixel(tc.x as u32, tc.y as u32);
+        let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
+        let color: mq::Color = texture.get_pixel(tc.x as u32, tc.y as u32);
         out_img.set_pixel(x as u32, y as u32, mq::Color::new(
             fog * color.r,
             fog * color.g,

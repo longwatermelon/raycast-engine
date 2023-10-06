@@ -14,7 +14,7 @@ async fn main() {
 
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
     map.floor_tex(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap());
-    map.ceil_tex(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap());
+    map.ceil_tex(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
@@ -109,8 +109,8 @@ async fn main() {
 fn window_conf() -> mq::Conf {
     mq::Conf {
         window_title: String::from("Raycast demo"),
-        window_width: 800,
-        window_height: 800,
+        window_width: 600,
+        window_height: 600,
         window_resizable: false,
         ..Default::default()
     }
