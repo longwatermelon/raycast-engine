@@ -66,11 +66,21 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     };
 
     let srcx: u32 = ((texture_index % map.tsize) / map.tsize * texture.width() as f32) as u32;
-    for y in offset.max(0)..(offset + h).min(out_img.height() as i32) {
+
+    let y0: i32 = offset.max(0).min(out_img.height() as i32);
+    let y1: i32 = (offset + h).min(out_img.height() as i32);
+
+    let mut out_i: usize = y0 as usize * out_img.width() + x as usize;
+    let out_di: usize = out_img.width();
+    let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
+    let tex_data: &[[u8; 4]] = texture.get_image_data();
+
+    for y in y0..y1 {
         let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-        let mut color: mq::Color = texture.get_pixel(srcx, srcy);
-        color.a = fog;
-        out_img.set_pixel(x as u32, y as u32, color);
+        let mut color: [u8; 4] = tex_data[srcy as usize * texture.width() + srcx as usize];
+        color[3] = (fog * 255.) as u8;
+        out_data[out_i] = color;
+        out_i += out_di;
     }
 
     (offset + h, offset)
@@ -78,12 +88,23 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
 
 fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, surface: &Surface, scrdim: IVec2, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
-    for y in y0.max(0).min(scrdim.y)..y1.max(0).min(scrdim.y) {
+    let y0: i32 = y0.max(0).min(scrdim.y);
+    let y1: i32 = y1.max(0).min(scrdim.y);
+
+    let mut out_i: usize = y0 as usize * out_img.width() + x as usize;
+    let out_di: usize = out_img.width();
+    let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
+    let surf_data: &[[u8; 4]] = match surface {
+        Surface::Texture(img) => img.get_image_data(),
+        Surface::Color(_) => &[[0, 0, 0, 0]], // Placeholder - won't be used anyways
+    };
+
+    for y in y0..y1 {
         // Find ray angles corresponding to screen pixel
         let ha: f32 = (x as f32 / scrdim.x as f32) - 0.5;
         let va: f32 = (y as f32 / scrdim.x as f32) - 0.5;
         // x = ray.angle, y = angle looking down, z is useless
-        let dir: Vec3 = Vec3::new(f32::sin(ha), f32::sin(va + ray.vangle), 1.).normalize();
+        let dir: Vec3 = Vec3::new(ha, f32::sin(va + ray.vangle), 1.).normalize();
 
         // How many `dir.y` it takes to get to the floor
         let tvert: f32 = -pitch_direction as f32 * (map.tsize / 2.) / dir.y;
@@ -92,16 +113,21 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let fog: f32 = calculate_fog(fog, distance);
 
         // Rendering
-        let mut color: mq::Color = match surface {
+        let color: [u8; 4] = match surface {
             Surface::Texture(texture) => {
                 let tc: Vec2 = new_pos % Vec2::new(texture.width() as f32, texture.height() as f32);
-                texture.get_pixel(tc.x as u32, tc.y as u32)
+                surf_data[tc.y as usize * texture.width() + tc.x as usize]
             }
-            Surface::Color(color) => *color
+            Surface::Color(color) => [
+                (color.r * 255.) as u8,
+                (color.g * 255.) as u8,
+                (color.b * 255.) as u8,
+                (fog * 255.) as u8,
+            ],
         };
-        color.a = fog;
 
-        out_img.set_pixel(x as u32, y as u32, color);
+        out_data[out_i] = color;
+        out_i += out_di;
     }
 }
 

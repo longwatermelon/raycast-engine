@@ -17,7 +17,7 @@ async fn main() {
     let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
     // map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
     map.floor_tex(Surface::Color(mq::BEIGE));
-    map.ceil_tex(Surface::Color(mq::WHITE));
+    map.ceil_tex(Surface::Color(mq::GRAY));
 
     let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 35.)]);
 
