@@ -8,31 +8,33 @@ use entity::Entity;
 use map::Map;
 use item::Item;
 use macroquad::prelude as mq;
-use glam::{Vec2, Vec3};
+use glam::{Vec2, Vec3, IVec2};
 use std::f32::consts::PI;
 
 pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
-    let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
+    let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
+    let vins: Vec<(Intersection, f32)> = cast_rays(map, ray, scrdim);
+
     for (x, (ins, angle)) in vins.iter().enumerate() {
         let mut cast_ray: Ray = Ray::new(ray.orig, *angle);
         cast_ray.vangle = ray.vangle;
 
-        let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, mq::screen_height() as i32, -1, fog, &map.floor_tex, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
-        render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
+        let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, scrdim, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, scrdim.y, -1, fog, &map.floor_tex, scrdim, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, scrdim, out_img);
+        render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, scrdim, out_img);
     }
 }
 
 /// Ignores entities
 // Returns [(Wall intersection, angle)]
-fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
+fn cast_rays(map: &Map, ray: Ray, scrdim: IVec2) -> Vec<(Intersection, f32)> {
     let angle_range: f32 = PI / 3.;
     let start_angle: f32 = ray.angle - angle_range / 2.;
 
     let mut res: Vec<(Intersection, f32)> = Vec::new();
-    for i in 0..mq::screen_width() as i32 {
-        let angle: f32 = start_angle + (i as f32 / mq::screen_width() * angle_range);
+    for i in 0..scrdim.x {
+        let angle: f32 = start_angle + (i as f32 / scrdim.y as f32 * angle_range);
         let mut ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
         ins.fisheye_distance *= f32::cos(util::restrict_angle(angle - ray.angle));
         res.push((ins, angle));
@@ -42,9 +44,9 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 }
 
 /// Returns (wall bottom, wall top)
-fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) -> (i32, i32) {
-    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
-    let h: i32 = ((map.tsize * mq::screen_height()) / ins.fisheye_distance) as i32;
+fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, scrdim: IVec2, out_img: &mut mq::Image) -> (i32, i32) {
+    let floor_level: f32 = (scrdim.y as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
+    let h: i32 = ((map.tsize * scrdim.y as f32) / ins.fisheye_distance) as i32;
     let offset: i32 = floor_level as i32 - (h / 2);
 
     let texture: &mq::Image = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
@@ -75,12 +77,12 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, texture: &mq::Image, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, texture: &mq::Image, scrdim: IVec2, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
-    for y in y0.max(0).min(mq::screen_height() as i32)..y1.max(0).min(mq::screen_height() as i32) {
+    for y in y0.max(0).min(scrdim.y)..y1.max(0).min(scrdim.y) {
         // Find ray angles corresponding to screen pixel
-        let ha: f32 = (x as f32 / mq::screen_width()) - 0.5;
-        let va: f32 = (y as f32 / mq::screen_height()) - 0.5;
+        let ha: f32 = (x as f32 / scrdim.x as f32) - 0.5;
+        let va: f32 = (y as f32 / scrdim.x as f32) - 0.5;
         // x = ray.angle, y = angle looking down, z is useless
         let dir: Vec3 = Vec3::new(f32::sin(ha), f32::sin(va + ray.vangle), 1.).normalize();
 
@@ -102,7 +104,7 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
     }
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>, out_img: &mut mq::Image) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>, scrdim: IVec2, out_img: &mut mq::Image) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
@@ -115,10 +117,10 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-    let floor_level: f32 = (mq::screen_height() / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
+    let floor_level: f32 = (scrdim.y as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
     for (ent, ins) in &vins {
-        let h: f32 = (ent.h * mq::screen_height()) / ins.distance;
-        let middle_h: f32 = (map.tsize / 2. * mq::screen_height()) / ins.distance;
+        let h: f32 = (ent.h * scrdim.y as f32) / ins.distance;
+        let middle_h: f32 = (map.tsize / 2. * scrdim.y as f32) / ins.distance;
         let offset: f32 = floor_level + middle_h - h;
 
         let h: i32 = h as i32;

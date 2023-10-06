@@ -109,8 +109,8 @@ async fn main() {
 fn window_conf() -> mq::Conf {
     mq::Conf {
         window_title: String::from("Raycast demo"),
-        window_width: 600,
-        window_height: 600,
+        window_width: 800,
+        window_height: 800,
         window_resizable: false,
         ..Default::default()
     }

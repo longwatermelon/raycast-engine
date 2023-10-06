@@ -169,7 +169,7 @@ impl Map {
     }
 
     pub fn at(&self, gx: i32, gy: i32) -> char {
-        self.layout.chars().nth((gy * self.w as i32 + gx) as usize).unwrap_or(' ')
+        self.layout.as_bytes()[(gy * self.w as i32 + gx) as usize] as char
     }
 
     pub fn set(&mut self, gx: i32, gy: i32, c: char) {
