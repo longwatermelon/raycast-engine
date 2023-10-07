@@ -2,7 +2,7 @@ use crate::util::{self, Ray, Intersection, IntersectionType};
 use glam::Vec2;
 use std::f32::consts::PI;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Entity {
     pub pos: Vec2,
     pub texture: char,

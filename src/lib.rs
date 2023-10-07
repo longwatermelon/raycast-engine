@@ -12,7 +12,7 @@ use macroquad::prelude as mq;
 use glam::{Vec2, Vec3, IVec2};
 use std::f32::consts::PI;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Fog {
     None,
     /// distance

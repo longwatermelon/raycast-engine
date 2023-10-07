@@ -2,6 +2,7 @@ use crate::util;
 use macroquad::prelude as mq;
 use glam::Vec2;
 
+#[derive(Debug)]
 pub enum Animation {
     None,
     EaseIn { target: Vec2 },
@@ -9,6 +10,7 @@ pub enum Animation {
     TextureSwap { orig: mq::Texture2D, t: f32 }
 }
 
+#[derive(Debug)]
 pub struct Item {
     pub name: String,
     texture: mq::Texture2D,

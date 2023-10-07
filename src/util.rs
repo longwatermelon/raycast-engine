@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 
 static mut SCRDIM: IVec2 = IVec2::new(0, 0);
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Direction {
     North,
     East,
@@ -14,12 +14,13 @@ pub enum Direction {
     West,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IntersectionType {
     Wall { gpos: IVec2, face: Direction },
     Entity { index: usize, col: f32 }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct Intersection {
     pub itype: IntersectionType,
     pub distance: f32,
@@ -28,7 +29,7 @@ pub struct Intersection {
     pub fisheye_distance: f32,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Ray {
     pub orig: Vec2,
     pub angle: f32,
