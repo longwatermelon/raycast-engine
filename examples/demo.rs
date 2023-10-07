@@ -91,9 +91,11 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, rc::Fog::Directional(300., 300.), &mut out_img);
+        raycast::render(&map, &entities, cam, rc::Fog::None, &mut out_img);
         out_tex.update(&out_img);
-        mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
+
+        let (top_x, top_y) = rc::scr_topleft();
+        mq::draw_texture(&out_tex, top_x, top_y, mq::WHITE);
 
         raycast::render_item(&mut items);
 

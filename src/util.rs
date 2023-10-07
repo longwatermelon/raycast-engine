@@ -139,3 +139,9 @@ pub fn set_scrw_scrh(w: i32, h: i32) {
         SCRDIM.y = h;
     }
 }
+
+pub fn scr_topleft() -> (f32, f32) {
+    let top_x: f32 = if scrw() == mq::screen_width() as i32 { 0. } else { mq::screen_width() / 2. - scrw() as f32 / 2. };
+    let top_y: f32 = if scrh() == mq::screen_height() as i32 { 0. } else { mq::screen_height() / 2. - scrh() as f32 / 2. };
+    (top_x, top_y)
+}

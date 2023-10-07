@@ -104,7 +104,8 @@ impl Item {
             self.texture.height() - ysection_below_screen
         };
 
-        mq::draw_texture_ex(&self.texture, self.pos.x, self.pos.y, mq::WHITE, mq::DrawTextureParams {
+        let topleft: (f32, f32) = util::scr_topleft();
+        mq::draw_texture_ex(&self.texture, self.pos.x + topleft.0, self.pos.y + topleft.1, mq::WHITE, mq::DrawTextureParams {
             dest_size: Some(mq::Vec2::new(self.texture.width(), new_h)),
             source: Some(mq::Rect::new(0., 0., self.texture.width(), new_h)),
             ..Default::default()
