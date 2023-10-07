@@ -209,7 +209,7 @@ fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[&Entity], wall_dis
 
         for y in y0..y1 {
             let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
-            let mut color: [u8; 4] = tex_data[srcy as usize * texture.width() + srcx as usize];
+            let mut color: [u8; 4] = tex_data[(srcy as usize * texture.width() + srcx as usize).min(tex_data.len() - 1).max(0)];
 
             if color[3] > 0 {
                 color[3] = (fog * 255.) as u8;
