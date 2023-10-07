@@ -21,7 +21,7 @@ pub enum Fog {
     Directional(f32, f32),
 }
 
-pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Fog, out_img: &mut mq::Image) {
+pub fn render(map: &Map, entities: &[&Entity], ray: Ray, fog: Fog, out_img: &mut mq::Image) {
     // let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
 
@@ -172,7 +172,7 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, ins: &Intersection, x: i32,
     }
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Fog, out_img: &mut mq::Image) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[&Entity], wall_dist: f32, fog: Fog, out_img: &mut mq::Image) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
