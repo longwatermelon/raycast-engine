@@ -9,6 +9,9 @@ async fn main() {
 
     let mut textures: HashMap<char, mq::Image> = HashMap::new();
     textures.insert('0', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
+    textures.insert('1', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
+    textures.insert('2', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
+    textures.insert('3', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
     let mut map: rc::Map = rc::Map::from_bytes(include_bytes!("res/map"), textures);
@@ -16,6 +19,9 @@ async fn main() {
     // map.ceil_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
     map.floor_tex(rc::Surface::Color(mq::BEIGE));
     map.ceil_tex(rc::Surface::Color(mq::GRAY));
+    map.wall_height('1', 2.);
+    map.wall_height('2', 3.);
+    map.wall_height('3', 4.);
 
     let mut entities: Vec<rc::Entity> = map.filter_entities(&['e'], &[(20., 30.)]);
 

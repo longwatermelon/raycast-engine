@@ -19,6 +19,7 @@ pub struct Map {
     pub(crate) h: f32,
     pub(crate) tsize: f32,
     pub(crate) textures: HashMap<char, mq::Image>,
+    pub(crate) wall_heights: HashMap<char, f32>,
     pub(crate) floor_tex: Surface,
     pub(crate) ceil_tex: Surface,
 }
@@ -45,6 +46,7 @@ impl Map {
             h,
             tsize: 50.,
             textures,
+            wall_heights: HashMap::new(),
             floor_tex: Surface::Color(mq::BLACK),
             ceil_tex: Surface::Color(mq::BLACK),
         }
@@ -60,6 +62,7 @@ impl Map {
             h: h as f32,
             tsize: 50.,
             textures,
+            wall_heights: HashMap::new(),
             floor_tex: Surface::Color(mq::BLACK),
             ceil_tex: Surface::Color(mq::BLACK),
         }
@@ -71,6 +74,10 @@ impl Map {
 
     pub fn ceil_tex(&mut self, surface: Surface) {
         self.ceil_tex = surface;
+    }
+
+    pub fn wall_height(&mut self, wall: char, hmul: f32) {
+        self.wall_heights.insert(wall, hmul);
     }
 
     pub fn from_bytes(bytes: &[u8], textures: HashMap<char, mq::Image>) -> Self {

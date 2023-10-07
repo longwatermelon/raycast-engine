@@ -9,7 +9,7 @@ use entity::Entity;
 use map::{Map, Surface};
 use item::Item;
 use macroquad::prelude as mq;
-use glam::{Vec2, Vec3};
+use glam::{Vec2, Vec3, IVec2};
 use std::f32::consts::PI;
 
 #[derive(Copy, Clone)]
@@ -70,9 +70,12 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 
 /// Returns (wall bottom, wall top)
 fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, out_img: &mut mq::Image) -> (i32, i32) {
+    let gpos: IVec2 = ins.wall_gpos();
+    let hmul: f32 = *map.wall_heights.get(&map.at(gpos.x, gpos.y)).unwrap_or(&1.);
+
     let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
-    let h: i32 = ((map.tsize * util::scrh() as f32) / ins.fisheye_distance) as i32;
-    let offset: i32 = floor_level as i32 - (h / 2);
+    let h: i32 = ((map.tsize * hmul * util::scrh() as f32) / ins.fisheye_distance) as i32;
+    let offset: i32 = floor_level as i32 - (h / 2) - (((hmul - 1.) / (hmul * 2.)) * h as f32) as i32;
 
     let texture: &mq::Image = map.textures.get(&map.at(ins.wall_gpos().x, ins.wall_gpos().y)).unwrap();
     let IntersectionType::Wall { face, .. } = ins.itype else { unreachable!() };
