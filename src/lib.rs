@@ -104,7 +104,9 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, out_im
         let srcy: u32 = (((y - offset) as f32 / h as f32) * texture.height() as f32) as u32;
         let mut color: [u8; 4] = tex_data[srcy as usize * texture.width() + srcx as usize];
         if color[3] > 0 {
-            color[3] = (fog * 255.) as u8;
+            color[0] = (fog * color[0] as f32) as u8;
+            color[1] = (fog * color[1] as f32) as u8;
+            color[2] = (fog * color[2] as f32) as u8;
             out_data[out_i] = color;
         }
         out_i += out_di;
