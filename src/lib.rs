@@ -30,8 +30,8 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Fog, out_img: &mut 
         cast_ray.vangle = ray.vangle;
 
         let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, util::scrh(), -1, fog, &map.floor_tex, out_img);
-        render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, wall_res.0, util::scrh(), -1, fog, &map.floor_tex, out_img);
+        render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
     }
 
@@ -118,7 +118,7 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, out_im
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Fog, surface: &Surface, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, ins: &Intersection, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Fog, surface: &Surface, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
     let y0: i32 = y0.max(0).min(util::scrh());
     let y1: i32 = y1.max(0).min(util::scrh());
@@ -139,7 +139,14 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
         let dir: Vec3 = Vec3::new(ha, f32::sin(va + ray.vangle), 1.).normalize();
 
         // How many `dir.y` it takes to get to the floor
-        let tvert: f32 = -pitch_direction as f32 * (map.tsize / 2.) / dir.y;
+        let gpos: IVec2 = ins.wall_gpos();
+        let wall_h: f32 = *map.wall_heights.get(&map.at(gpos.x, gpos.y)).unwrap_or(&1.);
+        let dist_to_wall: f32 = if pitch_direction > 0 {
+            map.tsize * wall_h - map.tsize / 2.
+        } else {
+            map.tsize / 2.
+        };
+        let tvert: f32 = -pitch_direction as f32 * dist_to_wall / dir.y;
         let new_pos: Vec2 = ray.along(tvert);
         let distance: f32 = ray.orig.distance(new_pos);
         let fog: f32 = calculate_fog(fog, distance);
