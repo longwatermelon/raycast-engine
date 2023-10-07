@@ -45,8 +45,8 @@ pub fn render(map: &Map, entities: &[&Entity], ray: Ray, fog: Fog, out_img: &mut
                 let brightness: f32 = (1. - r / radius).max(0.).min(1.);
 
                 let color: [u8; 4] = out_data[index];
-                index += 1;
                 out_data[index] = [color[0], color[1], color[2], (brightness * color[3] as f32) as u8];
+                index += 1;
             }
         }
     }
