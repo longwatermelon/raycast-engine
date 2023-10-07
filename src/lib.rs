@@ -2,6 +2,7 @@ pub mod util;
 pub mod map;
 pub mod entity;
 pub mod item;
+pub mod prelude;
 
 use util::{Ray, Intersection, IntersectionType, Direction};
 use entity::Entity;
@@ -11,7 +12,16 @@ use macroquad::prelude as mq;
 use glam::{Vec2, Vec3};
 use std::f32::consts::PI;
 
-pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_img: &mut mq::Image) {
+#[derive(Copy, Clone)]
+pub enum Fog {
+    None,
+    /// distance
+    Point(f32),
+    /// distance, radius
+    Directional(f32, f32),
+}
+
+pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Fog, out_img: &mut mq::Image) {
     // let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
 
@@ -23,6 +33,21 @@ pub fn render(map: &Map, entities: &[Entity], ray: Ray, fog: Option<f32>, out_im
         render_floor_and_ceil_yrange(map, cast_ray, x as i32, wall_res.0, util::scrh(), -1, fog, &map.floor_tex, out_img);
         render_floor_and_ceil_yrange(map, cast_ray, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
         render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
+    }
+
+    if let Fog::Directional(_, radius) = fog {
+        let imgdims = (out_img.width(), out_img.height());
+        let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
+        for y in 0..imgdims.1 {
+            for x in 0..imgdims.0 {
+                let r: f32 = Vec2::new(x as f32, y as f32).distance(Vec2::new(util::scrw() as f32 / 2., util::scrh() as f32 / 2.));
+                let brightness: f32 = (1. - r / radius).max(0.).min(1.);
+
+                let index: usize = y * imgdims.0 + x;
+                let color: [u8; 4] = out_data[index];
+                out_data[index] = [color[0], color[1], color[2], (brightness * color[3] as f32) as u8];
+            }
+        }
     }
 }
 
@@ -44,7 +69,7 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 }
 
 /// Returns (wall bottom, wall top)
-fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>, out_img: &mut mq::Image) -> (i32, i32) {
+fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, out_img: &mut mq::Image) -> (i32, i32) {
     let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
     let h: i32 = ((map.tsize * util::scrh() as f32) / ins.fisheye_distance) as i32;
     let offset: i32 = floor_level as i32 - (h / 2);
@@ -59,7 +84,7 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     } else {
         (endp.y, 1.)
     };
-    let fog: f32 = if fog.is_some() {
+    let fog: f32 = if !matches!(fog, Fog::None) {
         calculate_fog(fog, ins.distance)
     } else {
         shading
@@ -86,7 +111,7 @@ fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Option<f32>
     (offset + h, offset)
 }
 
-fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Option<f32>, surface: &Surface, out_img: &mut mq::Image) {
+fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, pitch_direction: i32, fog: Fog, surface: &Surface, out_img: &mut mq::Image) {
     // From wall bottom to screen bottom
     let y0: i32 = y0.max(0).min(util::scrh());
     let y1: i32 = y1.max(0).min(util::scrh());
@@ -133,7 +158,7 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, x: i32, y0: i32, y1: i32, p
     }
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Option<f32>, out_img: &mut mq::Image) {
+fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[Entity], wall_dist: f32, fog: Fog, out_img: &mut mq::Image) {
     let mut vins: Vec<(Entity, Intersection)> = entities
         .iter()
         .cloned()
@@ -219,11 +244,10 @@ pub fn render_2d(map: &Map, ray: Ray) {
     mq::draw_line(ox, oy, endx, endy, 3., mq::BLUE);
 }
 
-fn calculate_fog(fog: Option<f32>, distance: f32) -> f32 {
-    if let Some(fog) = fog {
-        1. - f32::min(distance / fog, 1.)
-    } else {
-        1.
+fn calculate_fog(fog: Fog, distance: f32) -> f32 {
+    match fog {
+        Fog::None => 1.,
+        Fog::Point(dist) | Fog::Directional(dist, _) => 1. - f32::min(distance / dist, 1.),
     }
 }
 

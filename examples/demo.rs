@@ -1,7 +1,4 @@
-use raycast::map::{Map, Surface};
-use raycast::util::{self, Ray, Intersection, IntersectionType};
-use raycast::entity::Entity;
-use raycast::item::Item;
+use raycast::prelude as rc;
 use macroquad::prelude as mq;
 use glam::Vec2;
 use std::collections::HashMap;
@@ -14,23 +11,23 @@ async fn main() {
     textures.insert('0', mq::Image::from_file_with_format(include_bytes!("res/wall.png"), Some(mq::ImageFormat::Png)).unwrap());
     textures.insert('e', mq::Image::from_file_with_format(include_bytes!("res/shrek.png"), Some(mq::ImageFormat::Png)).unwrap());
 
-    let mut map: Map = Map::from_bytes(include_bytes!("res/map"), textures);
-    // map.floor_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
-    // map.ceil_tex(Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
-    map.floor_tex(Surface::Color(mq::BEIGE));
-    map.ceil_tex(Surface::Color(mq::GRAY));
+    let mut map: rc::Map = rc::Map::from_bytes(include_bytes!("res/map"), textures);
+    // map.floor_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    // map.ceil_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
+    map.floor_tex(rc::Surface::Color(mq::BEIGE));
+    map.ceil_tex(rc::Surface::Color(mq::GRAY));
 
-    let mut entities: Vec<Entity> = map.filter_entities(&['e'], &[(20., 30.)]);
+    let mut entities: Vec<rc::Entity> = map.filter_entities(&['e'], &[(20., 30.)]);
 
-    let mut items: Vec<Item> = vec![
-        Item::new("gun", include_bytes!("res/gun.png")),
-        Item::new("knife", include_bytes!("res/knife.png")),
+    let mut items: Vec<rc::Item> = vec![
+        rc::Item::new("gun", include_bytes!("res/gun.png")),
+        rc::Item::new("knife", include_bytes!("res/knife.png")),
     ];
     let mut selected_index: usize = 0;
 
     let shooting_gun: mq::Texture2D = mq::Texture2D::from_file_with_format(include_bytes!("res/gun-shoot.png"), Some(mq::ImageFormat::Png));
 
-    let mut cam: Ray = Ray::new(Vec2::new(110., 160.), 0.3);
+    let mut cam: rc::Ray = rc::Ray::new(Vec2::new(110., 160.), 0.3);
 
     let mut prev_mpos: (f32, f32) = mq::mouse_position();
 
@@ -42,8 +39,8 @@ async fn main() {
     let mut fps: i32 = mq::get_fps();
 
     let mut out_img: mq::Image = mq::Image::gen_image_color(
-        util::scrw() as u16,
-        util::scrh() as u16,
+        rc::scrw() as u16,
+        rc::scrh() as u16,
         mq::BLACK
     );
     let out_tex: mq::Texture2D = mq::Texture2D::from_image(&out_img);
@@ -74,9 +71,9 @@ async fn main() {
             }
 
             // Raycast
-            let ins: Intersection = raycast::cast_ray(&map, &entities, cam);
+            let ins: rc::Intersection = raycast::cast_ray(&map, &entities, cam);
             match ins.itype {
-                IntersectionType::Entity { index, .. } => println!("Hit entity {}", index),
+                rc::IntersectionType::Entity { index, .. } => println!("Hit entity {}", index),
                 _ => println!("Hit wall")
             }
         }
@@ -94,7 +91,7 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        raycast::render(&map, &entities, cam, Some(300.), &mut out_img);
+        raycast::render(&map, &entities, cam, rc::Fog::Directional(300., 300.), &mut out_img);
         out_tex.update(&out_img);
         mq::draw_texture(&out_tex, 0., 0., mq::WHITE);
 
