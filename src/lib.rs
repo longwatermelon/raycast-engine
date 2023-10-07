@@ -282,11 +282,15 @@ pub fn equip_item(items: &mut Vec<Item>, item_name: &str) {
     }
 }
 
-pub fn cast_ray(map: &Map, entities: &[&Entity], ray: Ray) -> Intersection {
+pub fn cast_ray(map: &Map, entities: &[&Entity], ignored_ents: &[char], ray: Ray) -> Intersection {
     let map_ins: Intersection = map.cast_ray(ray);
 
     let mut ent_ins: Intersection = Intersection::new(IntersectionType::Entity { index: 0, col: 0. }, f32::INFINITY);
     for (i, ent) in entities.iter().enumerate() {
+        if ignored_ents.contains(&ent.texture) {
+            continue;
+        }
+
         if let Some(ins) = ent.intersect(ray) {
             if ins.distance < ent_ins.distance {
                 ent_ins = ins;
