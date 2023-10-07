@@ -38,13 +38,14 @@ pub fn render(map: &Map, entities: &[&Entity], ray: Ray, fog: Fog, out_img: &mut
     if let Fog::Directional(_, radius) = fog {
         let imgdims = (out_img.width(), out_img.height());
         let out_data: &mut [[u8; 4]] = out_img.get_image_data_mut();
+        let mut index: usize = 0;
         for y in 0..imgdims.1 {
             for x in 0..imgdims.0 {
                 let r: f32 = Vec2::new(x as f32, y as f32).distance(Vec2::new(util::scrw() as f32 / 2., util::scrh() as f32 / 2.));
                 let brightness: f32 = (1. - r / radius).max(0.).min(1.);
 
-                let index: usize = y * imgdims.0 + x;
                 let color: [u8; 4] = out_data[index];
+                index += 1;
                 out_data[index] = [color[0], color[1], color[2], (brightness * color[3] as f32) as u8];
             }
         }
