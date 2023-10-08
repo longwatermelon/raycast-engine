@@ -17,8 +17,8 @@ async fn main() {
     let mut map: rc::Map = rc::Map::from_bytes(include_bytes!("res/map"), textures);
     // map.floor_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/floor.png"), Some(mq::ImageFormat::Png)).unwrap()));
     // map.ceil_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
-    map.floor_tex(rc::Surface::Color(mq::BEIGE));
-    map.ceil_tex(rc::Surface::Color(mq::GRAY));
+    map.floor_tex(rc::Surface::Color(mq::BEIGE.into()));
+    map.ceil_tex(rc::Surface::Color(mq::GRAY.into()));
     // map.wall_height('0', 2.);
     // map.wall_height('1', 2.);
     // map.wall_height('2', 3.);

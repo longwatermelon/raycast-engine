@@ -160,12 +160,7 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, ins: &Intersection, x: i32,
                 color[3] = (fog * 255.) as u8;
                 color
             }
-            Surface::Color(color) => [
-                (color.r * 255.) as u8,
-                (color.g * 255.) as u8,
-                (color.b * 255.) as u8,
-                (fog * 255.) as u8,
-            ],
+            Surface::Color(color) => [color[0], color[1], color[2], (fog * 255.) as u8],
         };
 
         out_data[out_i] = color;

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub enum Surface {
     Texture(mq::Image),
-    Color(mq::Color),
+    Color([u8; 4]),
 }
 
 #[derive(Debug)]
@@ -47,8 +47,8 @@ impl Map {
             tsize: 50.,
             textures,
             wall_heights: HashMap::new(),
-            floor_tex: Surface::Color(mq::BLACK),
-            ceil_tex: Surface::Color(mq::BLACK),
+            floor_tex: Surface::Color([0, 0, 0, 255]),
+            ceil_tex: Surface::Color([0, 0, 0, 255]),
         }
     }
 
@@ -63,8 +63,8 @@ impl Map {
             tsize: 50.,
             textures,
             wall_heights: HashMap::new(),
-            floor_tex: Surface::Color(mq::BLACK),
-            ceil_tex: Surface::Color(mq::BLACK),
+            floor_tex: Surface::Color([0, 0, 0, 255]),
+            ceil_tex: Surface::Color([0, 0, 0, 255]),
         }
     }
 
