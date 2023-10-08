@@ -78,7 +78,7 @@ async fn main() {
             }
 
             // Raycast
-            let ins: rc::Intersection = raycast::cast_ray(&map, &entities.iter().collect::<Vec<&rc::Entity>>(), &[], cam);
+            let ins: rc::Intersection = raycast::cast_ray(&map, entities.iter(), &[], cam);
             match ins.itype {
                 rc::IntersectionType::Entity { index, .. } => println!("Hit entity {}", index),
                 _ => println!("Hit wall")

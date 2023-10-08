@@ -276,11 +276,11 @@ pub fn equip_item(items: &mut Vec<Item>, item_name: &str) {
     }
 }
 
-pub fn cast_ray(map: &Map, entities: &[&Entity], ignored_ents: &[char], ray: Ray) -> Intersection {
+pub fn cast_ray<'a, I>(map: &Map, entities: I, ignored_ents: &[char], ray: Ray) -> Intersection where I: Iterator<Item = &'a Entity> {
     let map_ins: Intersection = map.cast_ray(ray);
 
     let mut ent_ins: Intersection = Intersection::new(IntersectionType::Entity { index: 0, col: 0. }, f32::INFINITY);
-    for (i, ent) in entities.iter().enumerate() {
+    for (i, ent) in entities.enumerate() {
         if ignored_ents.contains(&ent.texture) {
             continue;
         }
