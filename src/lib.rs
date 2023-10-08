@@ -21,7 +21,7 @@ pub enum Fog {
     Directional(f32, f32),
 }
 
-pub fn render(map: &Map, entities: &[&Entity], ray: Ray, fog: Fog, out_img: &mut mq::Image) {
+pub fn render<'a, I>(map: &Map, entities: I, ray: Ray, fog: Fog, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> + Clone {
     // let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
 
@@ -32,7 +32,7 @@ pub fn render(map: &Map, entities: &[&Entity], ray: Ray, fog: Fog, out_img: &mut
         let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
         render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, wall_res.0, util::scrh(), -1, fog, &map.floor_tex, out_img);
         render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
-        render_entities(map, cast_ray, x as i32, entities, ins.distance, fog, out_img);
+        render_entities(map, cast_ray, x as i32, entities.clone(), ins.distance, fog, out_img);
     }
 
     if let Fog::Directional(_, radius) = fog {
@@ -168,14 +168,12 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, ins: &Intersection, x: i32,
     }
 }
 
-fn render_entities(map: &Map, ray: Ray, col: i32, entities: &[&Entity], wall_dist: f32, fog: Fog, out_img: &mut mq::Image) {
-    let mut vins: Vec<(Entity, Intersection)> = entities
-        .iter()
-        .cloned()
-        .map(|e| (e.clone(), e.intersect(ray)))
-        .filter(|x| x.1.is_some())
-        .filter(|x| x.1.as_ref().unwrap().distance < wall_dist)
-        .map(|t| (t.0, t.1.unwrap()))
+fn render_entities<'a, I>(map: &Map, ray: Ray, col: i32, entities: I, wall_dist: f32, fog: Fog, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> {
+    let mut vins: Vec<(&Entity, Intersection)> = entities
+        .map(|e| (e, e.intersect(ray))) // entity -> (entity, intersection w/ entity)
+        .filter(|x| x.1.is_some()) // Remove `None` intersection variants
+        .map(|x| (x.0, x.1.unwrap())) // Unwrap all `Some`s
+        .filter(|x| x.1.distance < wall_dist) // Entities in front of wall
         .collect();
 
     // Sort in descending, render farther entities first

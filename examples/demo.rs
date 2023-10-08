@@ -98,8 +98,8 @@ async fn main() {
 
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
-        let all_ents: Vec<&rc::Entity> = entities.iter().collect();
-        raycast::render(&map, &all_ents, cam, rc::Fog::Directional(300., 300.), &mut out_img);
+        // let all_ents: Vec<&rc::Entity> = entities.iter().collect();
+        raycast::render(&map, entities.iter(), cam, rc::Fog::Directional(300., 300.), &mut out_img);
         out_tex.update(&out_img);
 
         let (top_x, top_y) = rc::scr_topleft();
