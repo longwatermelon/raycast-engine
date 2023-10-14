@@ -60,7 +60,7 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 
     let mut res: Vec<(Intersection, f32)> = Vec::new();
     for i in 0..util::scrw() {
-        let angle: f32 = start_angle + (i as f32 / util::scrh() as f32 * angle_range);
+        let angle: f32 = start_angle + (i as f32 / util::scrw() as f32 * angle_range);
         let mut ins: Intersection = map.cast_ray(Ray::new(ray.orig, angle));
         ins.fisheye_distance *= f32::cos(util::restrict_angle(angle - ray.angle));
         res.push((ins, angle));
