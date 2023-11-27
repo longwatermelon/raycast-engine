@@ -15,9 +15,9 @@ pub enum Surface {
 #[derive(Debug)]
 pub struct Map {
     layout: String,
-    pub(crate) w: f32,
-    pub(crate) h: f32,
-    pub(crate) tsize: f32,
+    pub w: f32,
+    pub h: f32,
+    pub tsize: f32,
     pub(crate) textures: HashMap<char, mq::Image>,
     pub(crate) wall_heights: HashMap<char, f32>,
     pub(crate) floor_tex: Surface,
