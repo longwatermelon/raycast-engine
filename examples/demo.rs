@@ -19,7 +19,7 @@ async fn main() {
     // map.ceil_tex(rc::Surface::Texture(mq::Image::from_file_with_format(include_bytes!("res/ceiling.png"), Some(mq::ImageFormat::Png)).unwrap()));
     map.floor_tex(rc::Surface::Color(mq::BEIGE.into()));
     map.ceil_tex(rc::Surface::Color(mq::GRAY.into()));
-    // map.wall_height('0', 2.);
+    map.wall_height('0', 2.);
     // map.wall_height('1', 2.);
     // map.wall_height('2', 3.);
     // map.wall_height('3', 4.);
@@ -99,7 +99,7 @@ async fn main() {
         mq::clear_background(mq::BLACK);
         out_img.bytes.fill(0);
         // let all_ents: Vec<&rc::Entity> = entities.iter().collect();
-        raycast::render(&map, entities.iter(), cam, rc::Fog::None, &mut out_img);
+        raycast::render(&map, entities.iter(), cam, rc::Fog::None, &|| 0., &mut out_img);
         out_tex.update(&out_img);
 
         let (top_x, top_y) = rc::scr_topleft();

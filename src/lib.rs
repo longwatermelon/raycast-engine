@@ -21,7 +21,7 @@ pub enum Fog {
     Directional(f32, f32),
 }
 
-pub fn render<'a, I>(map: &Map, entities: I, ray: Ray, fog: Fog, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> + Clone {
+pub fn render<'a, I>(map: &Map, entities: I, ray: Ray, fog: Fog, floor_level: &impl Fn() -> f32, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> + Clone {
     // let scrdim: IVec2 = IVec2::new(mq::screen_width() as i32, mq::screen_height() as i32);
     let vins: Vec<(Intersection, f32)> = cast_rays(map, ray);
 
@@ -29,10 +29,10 @@ pub fn render<'a, I>(map: &Map, entities: I, ray: Ray, fog: Fog, out_img: &mut m
         let mut cast_ray: Ray = Ray::new(ray.orig, *angle);
         cast_ray.vangle = ray.vangle;
 
-        let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, out_img);
+        let wall_res = render_wall(map, ins, cast_ray, x as i32, fog, floor_level, out_img);
         render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, wall_res.0, util::scrh(), -1, fog, &map.floor_tex, out_img);
         render_floor_and_ceil_yrange(map, cast_ray, ins, x as i32, 0, wall_res.1 as i32, 1, fog, &map.ceil_tex, out_img);
-        render_entities(map, cast_ray, x as i32, entities.clone(), ins.distance, fog, out_img);
+        render_entities(map, cast_ray, x as i32, entities.clone(), ins.distance, fog, floor_level, out_img);
     }
 
     if let Fog::Directional(_, radius) = fog {
@@ -70,11 +70,11 @@ fn cast_rays(map: &Map, ray: Ray) -> Vec<(Intersection, f32)> {
 }
 
 /// Returns (wall bottom, wall top)
-fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, out_img: &mut mq::Image) -> (i32, i32) {
+fn render_wall(map: &Map, ins: &Intersection, ray: Ray, x: i32, fog: Fog, floor_lev: &impl Fn() -> f32, out_img: &mut mq::Image) -> (i32, i32) {
     let gpos: IVec2 = ins.wall_gpos();
     let hmul: f32 = *map.wall_heights.get(&map.at(gpos.x, gpos.y)).unwrap_or(&1.);
 
-    let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
+    let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.)) + floor_lev();
     let h: i32 = ((map.tsize * hmul * util::scrh() as f32) / ins.fisheye_distance) as i32;
     let offset: i32 = floor_level as i32 - (h / 2) - (((hmul - 1.) / (hmul * 2.)) * h as f32) as i32;
 
@@ -168,7 +168,7 @@ fn render_floor_and_ceil_yrange(map: &Map, ray: Ray, ins: &Intersection, x: i32,
     }
 }
 
-fn render_entities<'a, I>(map: &Map, ray: Ray, col: i32, entities: I, wall_dist: f32, fog: Fog, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> {
+fn render_entities<'a, I>(map: &Map, ray: Ray, col: i32, entities: I, wall_dist: f32, fog: Fog, floor_lev: &impl Fn() -> f32, out_img: &mut mq::Image) where I: Iterator<Item = &'a Entity> {
     let mut vins: Vec<(&Entity, Intersection)> = entities
         .map(|e| (e, e.intersect(ray))) // entity -> (entity, intersection w/ entity)
         .filter(|x| x.1.is_some()) // Remove `None` intersection variants
@@ -179,7 +179,7 @@ fn render_entities<'a, I>(map: &Map, ray: Ray, col: i32, entities: I, wall_dist:
     // Sort in descending, render farther entities first
     vins.sort_by(|a, b| b.1.distance.partial_cmp(&a.1.distance).unwrap());
 
-    let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.));
+    let floor_level: f32 = (util::scrh() as f32 / 2.) * (1. + f32::tan(-ray.vangle) / f32::tan(1. / 2.)) + floor_lev();
     for (ent, ins) in &vins {
         let h: f32 = (ent.h * util::scrh() as f32) / ins.distance;
         let middle_h: f32 = (map.tsize / 2. * util::scrh() as f32) / ins.distance;
